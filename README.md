@@ -1,2 +1,2 @@
-Hopefully a five in a row soon
+Five in a Row Game
 -----------------
