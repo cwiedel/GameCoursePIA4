@@ -17,7 +17,7 @@
 }
 
 +(UIColor *) playerTwoColor {
-    return UIColorFromRGB(0xFFCC00);
+    return UIColorFromRGB(0xFF2D55);
 }
 
 +(UIColor *) unusedTileColor {

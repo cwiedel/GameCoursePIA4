@@ -12,12 +12,14 @@
 @interface GameBoard ()
 
 @property int currentPlayer;
+@property (nonatomic, strong) UILabel *currentPlayerLabel;
 
 @end
 
 #define UIColorFromRGB(rgbValue) [UIColor colorWithRed:((float)((rgbValue & 0xFF0000) >> 16))/255.0 green:((float)((rgbValue & 0xFF00) >> 8))/255.0 blue:((float)(rgbValue & 0xFF))/255.0 alpha:1.0]
 #define PLAYER_ONE 1
 #define PLAYER_TWO 2
+#define UNUSED_CELL 0
 #define NUMBER_OF_ROWS 10
 #define NUMBER_OF_COLUMNS 10
 
@@ -31,7 +33,7 @@
     layout.minimumInteritemSpacing = 0.5f;
     layout.minimumLineSpacing = 0.5f;
     
-    UICollectionView *collectionView=[[UICollectionView alloc] initWithFrame:CGRectMake(0, 44, 280, 280) collectionViewLayout:layout];
+    UICollectionView *collectionView=[[UICollectionView alloc] initWithFrame:CGRectMake(0, 44, 290, 290) collectionViewLayout:layout];
     [collectionView setDataSource:self];
     [collectionView setDelegate:self];
     collectionView.center = self.view.center;
@@ -43,16 +45,24 @@
     
     self.currentPlayer = PLAYER_ONE;
     
+    self.currentPlayerLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, 44, 200, 44)];
+    [self.currentPlayerLabel setText:@"Current player:"];
+    [self.currentPlayerLabel setTextAlignment:NSTextAlignmentCenter];
+    self.currentPlayerLabel.center = CGPointMake(self.view.center.x, self.currentPlayerLabel.center.y);
+    [self.view addSubview:self.currentPlayerLabel];
+    
+    
     [super viewDidLoad];
-    // Do any additional setup after loading the view, typically from a nib.
 }
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
+    //NUMBER OF ITEMS IN SECTION
     return NUMBER_OF_COLUMNS;
 }
 -(NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView
 {
+    //SECTIONS
     return NUMBER_OF_ROWS;
 }
 
@@ -62,12 +72,15 @@
     UICollectionViewCell *cell=[collectionView dequeueReusableCellWithReuseIdentifier:@"cellIdentifier" forIndexPath:indexPath];
     
     cell.backgroundColor = [GameBoard unusedTileColor];
+    
+    NSLog(@"cell tag: %i",cell.tag);
+    
     return cell;
 }
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
 {
-    return CGSizeMake(26, 26);
+    return CGSizeMake(27, 27);
 }
 
 - (UIEdgeInsets) collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout insetForSectionAtIndex:(NSInteger)section
@@ -82,12 +95,20 @@
     
     switch (self.currentPlayer) {
         case PLAYER_ONE:
-            [cell setBackgroundColor:[GameBoard playerOneColor]];
-            self.currentPlayer = PLAYER_TWO;
+            if(cell.tag == UNUSED_CELL) {
+                [cell setBackgroundColor:[GameBoard playerOneColor]];
+                [cell setTag: PLAYER_ONE];
+                self.currentPlayer = PLAYER_TWO;
+                [self.currentPlayerLabel setText:@"Player TWO"];
+            }
             break;
         case PLAYER_TWO:
-            [cell setBackgroundColor:[GameBoard playerTwoColor]];
-            self.currentPlayer = PLAYER_ONE;
+            if(cell.tag == UNUSED_CELL) {
+                [cell setBackgroundColor:[GameBoard playerTwoColor]];
+                [cell setTag:PLAYER_TWO];
+                self.currentPlayer = PLAYER_ONE;
+                [self.currentPlayerLabel setText:@"Player ONE"];
+            }
             break;
         default:
             break;
