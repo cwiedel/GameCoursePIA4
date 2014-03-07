@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		6C01E3A918C9D26900347198 /* GameBoard.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C01E3A818C9D26900347198 /* GameBoard.m */; };
+		6C01E3AC18C9E49500347198 /* GameBoard+Colors.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C01E3AB18C9E49500347198 /* GameBoard+Colors.m */; };
 		6CB5C2AE18C9043000343C36 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6CB5C2AD18C9043000343C36 /* Foundation.framework */; };
 		6CB5C2B018C9043000343C36 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6CB5C2AF18C9043000343C36 /* CoreGraphics.framework */; };
 		6CB5C2B218C9043000343C36 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6CB5C2B118C9043000343C36 /* UIKit.framework */; };
@@ -35,6 +36,8 @@
 /* Begin PBXFileReference section */
 		6C01E3A718C9D26900347198 /* GameBoard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameBoard.h; sourceTree = "<group>"; };
 		6C01E3A818C9D26900347198 /* GameBoard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GameBoard.m; sourceTree = "<group>"; };
+		6C01E3AA18C9E49500347198 /* GameBoard+Colors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GameBoard+Colors.h"; sourceTree = "<group>"; };
+		6C01E3AB18C9E49500347198 /* GameBoard+Colors.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "GameBoard+Colors.m"; sourceTree = "<group>"; };
 		6CB5C2AA18C9043000343C36 /* SimpleGamePIA.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimpleGamePIA.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6CB5C2AD18C9043000343C36 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		6CB5C2AF18C9043000343C36 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -114,6 +117,8 @@
 				6CB5C2BD18C9043000343C36 /* AppDelegate.m */,
 				6C01E3A718C9D26900347198 /* GameBoard.h */,
 				6C01E3A818C9D26900347198 /* GameBoard.m */,
+				6C01E3AA18C9E49500347198 /* GameBoard+Colors.h */,
+				6C01E3AB18C9E49500347198 /* GameBoard+Colors.m */,
 				6CB5C2B418C9043000343C36 /* Supporting Files */,
 			);
 			path = SimpleGamePIA;
@@ -244,6 +249,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6C01E3AC18C9E49500347198 /* GameBoard+Colors.m in Sources */,
 				6C01E3A918C9D26900347198 /* GameBoard.m in Sources */,
 				6CB5C2BE18C9043000343C36 /* AppDelegate.m in Sources */,
 				6CB5C2BA18C9043000343C36 /* main.m in Sources */,

@@ -8,6 +8,11 @@
 
 #import <UIKit/UIKit.h>
 
+//typedef NS_ENUM(NSInteger, players){
+//    playerOne,
+//    playerTwo
+//};
+
 @interface GameBoard : UIViewController<UICollectionViewDataSource,UICollectionViewDelegateFlowLayout>
 
 @end
