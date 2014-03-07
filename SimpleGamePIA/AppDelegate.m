@@ -7,6 +7,8 @@
 //
 
 #import "AppDelegate.h"
+#import "GameBoard.h"
+//#import "MainViewController.h"
 
 @implementation AppDelegate
 
@@ -15,6 +17,26 @@
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     // Override point for customization after application launch.
     self.window.backgroundColor = [UIColor whiteColor];
+    
+    
+  //  MainViewController * mainWindowVC = [[MainViewController alloc] init];
+    
+    GameBoard *gameBoard = [[GameBoard alloc]init];
+    
+    [self.window setRootViewController:gameBoard];
+    
+    [application setStatusBarStyle:UIStatusBarStyleLightContent];
+    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     [self.window makeKeyAndVisible];
     return YES;
 }
