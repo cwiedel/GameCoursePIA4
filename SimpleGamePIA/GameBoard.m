@@ -10,7 +10,7 @@
 #import "GameBoard+Colors.h"
 #import <AFNetworking/AFNetworking.h>
 
-static NSString *const BaseURLString = @"http://www.raywenderlich.com/demos/weather_sample/";
+static NSString *const BaseURLString = @"http://localhost:4730/game/";
 
 @interface GameBoard ()
 
@@ -20,6 +20,10 @@ static NSString *const BaseURLString = @"http://www.raywenderlich.com/demos/weat
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, strong) NSMutableArray *indexPathArray;
 @property (nonatomic, strong) NSMutableArray *gameStateArray;
+
+
+@property (nonatomic, strong) UIButton *JSONGetButton;
+@property (nonatomic, strong) UIButton *JSONPostButton;
 
 @end
 
@@ -74,7 +78,23 @@ static NSString *const BaseURLString = @"http://www.raywenderlich.com/demos/weat
     self.startResetButton.center = CGPointMake(self.view.center.x, self.startResetButton.center.y);
     [self.startResetButton setTitleColor:[GameBoard labelColor] forState:UIControlStateNormal];
     [self.view addSubview:self.startResetButton];
+    
+    self.JSONGetButton = [[UIButton alloc]initWithFrame:CGRectMake(0, 440, 100, 44)];
+    [self.JSONGetButton setTitle:@"JSON Get" forState:UIControlStateNormal];
+//    self.JSONGetButton.center = CGPointMake(self.view.center.x, self.JSONGetButton.center.y);
+    [self.JSONGetButton setTitleColor:[GameBoard labelColor] forState:UIControlStateNormal];
+    [self.view addSubview:self.JSONGetButton];
+    [self.JSONGetButton addTarget:self action:@selector(jsonTestGet) forControlEvents:UIControlEventTouchUpInside];
+    
+    self.JSONPostButton = [[UIButton alloc]initWithFrame:CGRectMake(150, 440, 100, 44)];
+    [self.JSONPostButton setTitle:@"JSON Post" forState:UIControlStateNormal];
+//    self.JSONPostButton.center = CGPointMake(self.view.center.x, self.JSONPostButton.center.y);
+    [self.JSONPostButton setTitleColor:[GameBoard labelColor] forState:UIControlStateNormal];
+    [self.view addSubview:self.JSONPostButton];
+    [self.JSONPostButton addTarget:self action:@selector(jsonTestPost) forControlEvents:UIControlEventTouchUpInside];
+    
 }
+
 
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
@@ -221,12 +241,45 @@ static NSString *const BaseURLString = @"http://www.raywenderlich.com/demos/weat
     return false;
 }
 
-/*
-- (IBAction)jsonTapped:(id)sender
+
+- (void)jsonTestGet
 {
-    // 1
-    NSString *string = [NSString stringWithFormat:@"%@weather.php?format=json", BaseURLString];
-    NSURL *url = [NSURL URLWithString:string];
+    AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
+    [manager GET:BaseURLString parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        NSLog(@"JSON: %@", responseObject);
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        NSLog(@"Error: %@", error);
+    }];
+    
+}
+
+- (void)jsonTestPost
+{
+    AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
+    NSDictionary *parameters = @{@"id": @"123456"};
+    [manager POST:BaseURLString
+       parameters:parameters
+          success:^(AFHTTPRequestOperation *operation, id responseObject) {
+
+              NSError *e;
+              NSDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:[operation.responseString dataUsingEncoding:NSUTF8StringEncoding]
+                                                                       options:NSJSONReadingMutableContainers error:&e];
+              
+              NSLog(@"gamestate: %@", [jsonDict objectForKey:@"board"]);
+              NSArray *gameState = [jsonDict objectForKey:@"board"];
+              NSLog(@"gamestate length: %i",gameState.count);
+        
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        NSLog(@"Error: %@", error);
+    }];
+//    
+}
+
+/*
+- (void)jsonTestPost
+{
+    
+    NSURL *url = [NSURL URLWithString:@"http://localhost:4730/game/123456"];
     NSURLRequest *request = [NSURLRequest requestWithURL:url];
     
     // 2
@@ -236,19 +289,11 @@ static NSString *const BaseURLString = @"http://www.raywenderlich.com/demos/weat
     [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
         
         // 3
-        self.weather = (NSDictionary *)responseObject;
-        self.title = @"JSON Retrieved";
-        [self.tableView reloadData];
+        NSDictionary *json = (NSDictionary *)responseObject;
+        
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        
-        // 4
-        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Error Retrieving Weather"
-                                                            message:[error localizedDescription]
-                                                           delegate:nil
-                                                  cancelButtonTitle:@"Ok"
-                                                  otherButtonTitles:nil];
-        [alertView show];
+        NSLog(@"Error: %@", error);
     }];
     
     // 5
@@ -256,5 +301,21 @@ static NSString *const BaseURLString = @"http://www.raywenderlich.com/demos/weat
 }
 
 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 @end
