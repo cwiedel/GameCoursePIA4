@@ -13,6 +13,8 @@
 
 @property int currentPlayer;
 @property (nonatomic, strong) UILabel *currentPlayerLabel;
+@property (nonatomic, strong) UICollectionView *collectionView;
+@property (nonatomic, strong) NSMutableArray *indexPathArray;
 
 @end
 
@@ -33,15 +35,15 @@
     layout.minimumInteritemSpacing = 0.5f;
     layout.minimumLineSpacing = 0.5f;
     
-    UICollectionView *collectionView=[[UICollectionView alloc] initWithFrame:CGRectMake(0, 44, 290, 290) collectionViewLayout:layout];
-    [collectionView setDataSource:self];
-    [collectionView setDelegate:self];
-    collectionView.center = self.view.center;
+    self.collectionView=[[UICollectionView alloc] initWithFrame:CGRectMake(0, 44, 290, 290) collectionViewLayout:layout];
+    [self.collectionView setDataSource:self];
+    [self.collectionView setDelegate:self];
+    self.collectionView.center = self.view.center;
     
-    [collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"cellIdentifier"];
-    [collectionView setBackgroundColor:UIColorFromRGB(0xFFFFFF)];
+    [self.collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"cellIdentifier"];
+    [self.collectionView setBackgroundColor:UIColorFromRGB(0xFFFFFF)];
     
-    [self.view addSubview:collectionView];
+    [self.view addSubview:self.collectionView];
     
     self.currentPlayer = PLAYER_ONE;
     
@@ -50,6 +52,8 @@
     [self.currentPlayerLabel setTextAlignment:NSTextAlignmentCenter];
     self.currentPlayerLabel.center = CGPointMake(self.view.center.x, self.currentPlayerLabel.center.y);
     [self.view addSubview:self.currentPlayerLabel];
+    
+    self.indexPathArray = [[NSMutableArray alloc]init];
     
     
     [super viewDidLoad];
@@ -72,6 +76,9 @@
     UICollectionViewCell *cell=[collectionView dequeueReusableCellWithReuseIdentifier:@"cellIdentifier" forIndexPath:indexPath];
     
     cell.backgroundColor = [GameBoard unusedTileColor];
+    
+    // Add each cell's index path to the indexPath array
+    [self.indexPathArray addObject:indexPath];
     
     NSLog(@"cell tag: %i",cell.tag);
     
@@ -100,22 +107,46 @@
                 [cell setTag: PLAYER_ONE];
                 self.currentPlayer = PLAYER_TWO;
                 [self.currentPlayerLabel setText:@"Player TWO"];
+                [self checkIfPlayerWon:indexPath];
             }
             break;
         case PLAYER_TWO:
             if(cell.tag == UNUSED_CELL) {
                 [cell setBackgroundColor:[GameBoard playerTwoColor]];
-                [cell setTag:PLAYER_TWO];
+                [cell setTag: PLAYER_TWO];
                 self.currentPlayer = PLAYER_ONE;
                 [self.currentPlayerLabel setText:@"Player ONE"];
+                [self checkIfPlayerWon:indexPath];
             }
             break;
         default:
             break;
     }
+   
     
-    NSLog(@"touched cell %@ at indexPath %@", cell, indexPath);
-
+    //NSLog(@"touched cell %@ at indexPath %@", cell, indexPath);
 }
+
+
+-(void)checkIfPlayerWon:(NSIndexPath *) indexPath {
+    
+    NSLog(@"touched cell at indexPath %@", indexPath);
+    NSLog(@"touched cell at row: %i, section: %i", indexPath.row, indexPath.section);
+    UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:indexPath];
+    
+    NSLog(@"%@", self.indexPathArray);
+    
+//    int count = self.collectionView.subviews.count;
+//    NSLog(@"subviews: %i", count);
+//    
+//    for(int i = 0; i < count; i++)
+//    {
+//        UICollectionViewCell *cell = self.collectionView.subviews[i];
+//        NSLog(@"cell tag: %i",cell.tag);
+//
+//    }
+}
+
+
 
 @end
