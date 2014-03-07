@@ -24,4 +24,8 @@
     return UIColorFromRGB(0xF3F3F3);
 }
 
++(UIColor *) labelColor {
+    return UIColorFromRGB(0x1F1F21);
+}
+
 @end

@@ -13,5 +13,6 @@
 +(UIColor *) playerOneColor;
 +(UIColor *) playerTwoColor;
 +(UIColor *) unusedTileColor;
++(UIColor *) labelColor;
 
 @end

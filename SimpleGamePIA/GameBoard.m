@@ -8,11 +8,15 @@
 
 #import "GameBoard.h"
 #import "GameBoard+Colors.h"
+#import <AFNetworking/AFNetworking.h>
+
+static NSString *const BaseURLString = @"http://www.raywenderlich.com/demos/weather_sample/";
 
 @interface GameBoard ()
 
 @property int currentPlayer;
 @property (nonatomic, strong) UILabel *currentPlayerLabel;
+@property (nonatomic, strong) UIButton *startResetButton;
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, strong) NSMutableArray *indexPathArray;
 @property (nonatomic, strong) NSMutableArray *gameStateArray;
@@ -30,40 +34,48 @@
 
 - (void)viewDidLoad
 {
+    self.currentPlayer = PLAYER_ONE;
+
+    [self setupUI];
+    
+    self.indexPathArray = [[NSMutableArray alloc]init];
+    self.gameStateArray = [[NSMutableArray alloc]init];         // LOAD FROM API
+
+    [super viewDidLoad];
+}
+
+-(void)setupUI {
+    
     UICollectionViewFlowLayout *layout=[[UICollectionViewFlowLayout alloc] init];
     layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
     [layout setSectionInset:UIEdgeInsetsMake(0, 0, 0, 0)];
     layout.minimumInteritemSpacing = 0.5f;
     layout.minimumLineSpacing = 0.5f;
     
-    self.collectionView=[[UICollectionView alloc] initWithFrame:CGRectMake(0, 44, 290, 290) collectionViewLayout:layout];
+    self.collectionView=[[UICollectionView alloc] initWithFrame:CGRectMake(0, 84, 290, 290) collectionViewLayout:layout];
     [self.collectionView setDataSource:self];
     [self.collectionView setDelegate:self];
-    self.collectionView.center = self.view.center;
+    self.collectionView.center = CGPointMake(self.view.center.x, self.collectionView.center.y);
     
     [self.collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"cellIdentifier"];
     [self.collectionView setBackgroundColor:UIColorFromRGB(0xFFFFFF)];
     
     [self.view addSubview:self.collectionView];
     
-    self.currentPlayer = PLAYER_ONE;
-    
     self.currentPlayerLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, 44, 200, 44)];
     [self.currentPlayerLabel setText:@"Current player:"];
     [self.currentPlayerLabel setTextAlignment:NSTextAlignmentCenter];
+    [self.currentPlayerLabel setTextColor:[GameBoard labelColor]];
     self.currentPlayerLabel.center = CGPointMake(self.view.center.x, self.currentPlayerLabel.center.y);
     [self.view addSubview:self.currentPlayerLabel];
     
-    self.indexPathArray = [[NSMutableArray alloc]init];
-    self.gameStateArray = [[NSMutableArray alloc]init];         // LOAD FROM API
-    
-//    for(int i = 0; i < 100; i++) {
-//        [self.gameStateArray addObject:[NSNumber numberWithInt:UNUSED_CELL]];
-//    }
-    
-    
-    [super viewDidLoad];
+    self.startResetButton = [[UIButton alloc]initWithFrame:CGRectMake(0, 400, 200, 44)];
+    [self.startResetButton setTitle:@"Start Game" forState:UIControlStateNormal];
+    self.startResetButton.center = CGPointMake(self.view.center.x, self.startResetButton.center.y);
+    [self.startResetButton setTitleColor:[GameBoard labelColor] forState:UIControlStateNormal];
+    [self.view addSubview:self.startResetButton];
 }
+
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
@@ -86,10 +98,10 @@
     // Add each cell's index path to the indexPath array
     [self.indexPathArray addObject:indexPath];
     
-   // int position = [self convertIndexPathToInt:indexPath];
+    // add 0 to gamestate array
     [self.gameStateArray addObject:[NSNumber numberWithInt: UNUSED_CELL]];
     
-    NSLog(@"cell tag: %i",cell.tag);
+//    NSLog(@"cell tag: %i",cell.tag);
     
     return cell;
 }
@@ -178,6 +190,7 @@
             
             if(consecutiveCells >= 5){
                 NSLog(@"SOMEONE WON VERTICALLY");
+                [self.currentPlayerLabel setText:@"SOMEONE WON!"];
                 return true;
             }
         }
@@ -198,6 +211,7 @@
             
             if(consecutiveCells >= 5){
                 NSLog(@"SOMEONE WON HORIZONTALLY");
+                [self.currentPlayerLabel setText:@"SOMEONE WON!"];
                 return true;
             }
         }
@@ -207,6 +221,40 @@
     return false;
 }
 
+/*
+- (IBAction)jsonTapped:(id)sender
+{
+    // 1
+    NSString *string = [NSString stringWithFormat:@"%@weather.php?format=json", BaseURLString];
+    NSURL *url = [NSURL URLWithString:string];
+    NSURLRequest *request = [NSURLRequest requestWithURL:url];
+    
+    // 2
+    AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
+    operation.responseSerializer = [AFJSONResponseSerializer serializer];
+    
+    [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
+        
+        // 3
+        self.weather = (NSDictionary *)responseObject;
+        self.title = @"JSON Retrieved";
+        [self.tableView reloadData];
+        
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        
+        // 4
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Error Retrieving Weather"
+                                                            message:[error localizedDescription]
+                                                           delegate:nil
+                                                  cancelButtonTitle:@"Ok"
+                                                  otherButtonTitles:nil];
+        [alertView show];
+    }];
+    
+    // 5
+    [operation start];
+}
 
+*/
 
 @end
