@@ -107,7 +107,7 @@
                 [cell setTag: PLAYER_ONE];
                 self.currentPlayer = PLAYER_TWO;
                 [self.currentPlayerLabel setText:@"Player TWO"];
-                [self checkIfPlayerWon:indexPath];
+                [self checkIfPlayerWon];
             }
             break;
         case PLAYER_TWO:
@@ -116,7 +116,7 @@
                 [cell setTag: PLAYER_TWO];
                 self.currentPlayer = PLAYER_ONE;
                 [self.currentPlayerLabel setText:@"Player ONE"];
-                [self checkIfPlayerWon:indexPath];
+                [self checkIfPlayerWon];
             }
             break;
         default:
@@ -126,15 +126,65 @@
     
     //NSLog(@"touched cell %@ at indexPath %@", cell, indexPath);
 }
-
-
--(void)checkIfPlayerWon:(NSIndexPath *) indexPath {
+-(int)getTagForCellAtIndexPath:(int) column atRow:(int) row {
     
-    NSLog(@"touched cell at indexPath %@", indexPath);
-    NSLog(@"touched cell at row: %i, section: %i", indexPath.row, indexPath.section);
-    UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:indexPath];
+    NSIndexPath *cellTagtoFetch = [NSIndexPath indexPathForRow:row inSection:column];
+
+    UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:cellTagtoFetch];
     
-    NSLog(@"%@", self.indexPathArray);
+    return cell.tag;
+}
+
+-(BOOL)checkIfPlayerWon {
+    
+    //VERTICALLY
+    for(int column = 0; column < NUMBER_OF_COLUMNS; column++) {
+        int consecutiveCells = 0;
+        for(int row = 0; row < NUMBER_OF_ROWS; row++) {
+            int tag = [self getTagForCellAtIndexPath: column atRow:row];
+            if(tag == self.currentPlayer) {
+                consecutiveCells++;
+                NSLog(@"cons cells: %i", consecutiveCells);
+                NSLog(@"cell tag: %i", tag);
+            }else {
+                consecutiveCells = 0;
+            }
+            
+            if(consecutiveCells >= 5){
+                NSLog(@"SOMEONE WON VERTICALLY");
+                return true;
+            }
+        }
+    }
+    
+    //HORIZONTALLY
+    for(int column = 0; column < NUMBER_OF_COLUMNS; column++) {
+        int consecutiveCells = 0;
+        for(int row = 0; row < NUMBER_OF_ROWS; row++) {
+            int tag = [self getTagForCellAtIndexPath: row atRow:column];
+            if(tag == self.currentPlayer) {
+                consecutiveCells++;
+                NSLog(@"cons cells: %i", consecutiveCells);
+                NSLog(@"cell tag: %i", tag);
+            }else {
+                consecutiveCells = 0;
+            }
+            
+            if(consecutiveCells >= 5){
+                NSLog(@"SOMEONE WON HORIZONTALLY");
+                return true;
+            }
+        }
+    }
+    
+    
+    return false;
+    
+//    NSLog(@"touched cell at indexPath %@", indexPath);
+//    NSLog(@"touched cell at row: %i, section: %i", indexPath.row, indexPath.section);
+//    UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:indexPath];
+//    
+//    NSLog(@"%@", self.indexPathArray);
     
 //    int count = self.collectionView.subviews.count;
 //    NSLog(@"subviews: %i", count);
