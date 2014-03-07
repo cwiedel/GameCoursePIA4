@@ -15,6 +15,7 @@
 @property (nonatomic, strong) UILabel *currentPlayerLabel;
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, strong) NSMutableArray *indexPathArray;
+@property (nonatomic, strong) NSMutableArray *gameStateArray;
 
 @end
 
@@ -54,6 +55,11 @@
     [self.view addSubview:self.currentPlayerLabel];
     
     self.indexPathArray = [[NSMutableArray alloc]init];
+    self.gameStateArray = [[NSMutableArray alloc]init];         // LOAD FROM API
+    
+//    for(int i = 0; i < 100; i++) {
+//        [self.gameStateArray addObject:[NSNumber numberWithInt:UNUSED_CELL]];
+//    }
     
     
     [super viewDidLoad];
@@ -79,6 +85,9 @@
     
     // Add each cell's index path to the indexPath array
     [self.indexPathArray addObject:indexPath];
+    
+   // int position = [self convertIndexPathToInt:indexPath];
+    [self.gameStateArray addObject:[NSNumber numberWithInt: UNUSED_CELL]];
     
     NSLog(@"cell tag: %i",cell.tag);
     
@@ -108,6 +117,9 @@
                 self.currentPlayer = PLAYER_TWO;
                 [self.currentPlayerLabel setText:@"Player TWO"];
                 [self checkIfPlayerWon];
+                int position = [self convertIndexPathToInt:indexPath];
+                [self.gameStateArray replaceObjectAtIndex:position withObject:[NSNumber numberWithInt: PLAYER_ONE]];
+//                NSLog(@"foo: %@", self.gameStateArray[position]);
             }
             break;
         case PLAYER_TWO:
@@ -117,6 +129,9 @@
                 self.currentPlayer = PLAYER_ONE;
                 [self.currentPlayerLabel setText:@"Player ONE"];
                 [self checkIfPlayerWon];
+                int position = [self convertIndexPathToInt:indexPath];
+                [self.gameStateArray replaceObjectAtIndex:position withObject:[NSNumber numberWithInt: PLAYER_TWO]];
+//                NSLog(@"foo: %@", self.gameStateArray[position]);
             }
             break;
         default:
@@ -135,7 +150,18 @@
     return cell.tag;
 }
 
+-(int)convertIndexPathToInt:(NSIndexPath*) indexPath
+{
+    int tens = indexPath.row * 10;
+    int ones = indexPath.section;
+    int arrayInt = tens + ones;
+    NSLog(@"arrayInt: %i", arrayInt );
+    return arrayInt;
+}
+
 -(BOOL)checkIfPlayerWon {
+    
+//    NSLog(@"%@",self.gameStateArray);
     
     //VERTICALLY
     for(int column = 0; column < NUMBER_OF_COLUMNS; column++) {
@@ -145,7 +171,7 @@
             if(tag == self.currentPlayer) {
                 consecutiveCells++;
                 NSLog(@"cons cells: %i", consecutiveCells);
-                NSLog(@"cell tag: %i", tag);
+               // NSLog(@"cell tag: %i", tag);
             }else {
                 consecutiveCells = 0;
             }
@@ -164,7 +190,7 @@
             int tag = [self getTagForCellAtIndexPath: row atRow:column];
             if(tag == self.currentPlayer) {
                 consecutiveCells++;
-                NSLog(@"cons cells: %i", consecutiveCells);
+//                NSLog(@"cons cells: %i", consecutiveCells);
                 NSLog(@"cell tag: %i", tag);
             }else {
                 consecutiveCells = 0;
@@ -179,22 +205,6 @@
     
     
     return false;
-    
-//    NSLog(@"touched cell at indexPath %@", indexPath);
-//    NSLog(@"touched cell at row: %i, section: %i", indexPath.row, indexPath.section);
-//    UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:indexPath];
-//    
-//    NSLog(@"%@", self.indexPathArray);
-    
-//    int count = self.collectionView.subviews.count;
-//    NSLog(@"subviews: %i", count);
-//    
-//    for(int i = 0; i < count; i++)
-//    {
-//        UICollectionViewCell *cell = self.collectionView.subviews[i];
-//        NSLog(@"cell tag: %i",cell.tag);
-//
-//    }
 }
 
 
