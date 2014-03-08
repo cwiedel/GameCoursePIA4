@@ -256,8 +256,21 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 - (void)jsonTestPost
 {
     AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
+    // POST BODY
+    /*
+    var gameState = {
+        id: value,
+    boardColumns:  10,
+    board: getEmptyBoard(),
+    currentPlayer: userInfo.id,
+    players: [userInfo]
+    };
+    */
+    
     NSDictionary *parameters = @{@"id": @"123456"};
-    [manager POST:BaseURLString
+    
+
+    [manager POST:@"http://localhost:4730/game/123456"
        parameters:parameters
           success:^(AFHTTPRequestOperation *operation, id responseObject) {
 
