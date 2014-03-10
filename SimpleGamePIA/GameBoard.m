@@ -252,7 +252,10 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 - (void)jsonTestGet
 {
     AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
-    [manager GET:BaseURLString parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    manager.responseSerializer = [AFJSONResponseSerializer serializer];
+    manager.responseSerializer.acceptableContentTypes = [NSSet setWithObject:@"application/json"];
+    
+    [manager GET:@"http://localhost:4730/game/16" parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
         NSLog(@"JSON: %@", responseObject);
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         NSLog(@"Error: %@", error);
@@ -262,22 +265,19 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 
 - (void)jsonTestPost
 {
-    AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
-    // POST BODY
-    /*
-    var gameState = {
-        id: value,
-    boardColumns:  10,
-    board: getEmptyBoard(),
-    currentPlayer: userInfo.id,
-    players: [userInfo]
-    };
-    */
     
-    NSDictionary *parameters = @{@"id": @"123456"};
+    //Post first to get a game id
+    
+    AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
+    
+    manager.responseSerializer = [AFJSONResponseSerializer serializer];
+    manager.requestSerializer = [AFJSONRequestSerializer serializer];
+    
+    NSDictionary *parameters = @{@"id": @"123456",
+                                 @"name": @"Christian"};
     
 
-    [manager POST:@"http://localhost:4730/game/123456"
+    [manager POST:@"http://localhost:4730/game/"
        parameters:parameters
           success:^(AFHTTPRequestOperation *operation, id responseObject) {
 
@@ -292,50 +292,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         NSLog(@"Error: %@", error);
     }];
-//    
+
 }
-
-/*
-- (void)jsonTestPost
-{
-    
-    NSURL *url = [NSURL URLWithString:@"http://localhost:4730/game/123456"];
-    NSURLRequest *request = [NSURLRequest requestWithURL:url];
-    
-    // 2
-    AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
-    operation.responseSerializer = [AFJSONResponseSerializer serializer];
-    
-    [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
-        
-        // 3
-        NSDictionary *json = (NSDictionary *)responseObject;
-        
-        
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        NSLog(@"Error: %@", error);
-    }];
-    
-    // 5
-    [operation start];
-}
-
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 @end
