@@ -28,7 +28,6 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 
 @end
 
-#define UIColorFromRGB(rgbValue) [UIColor colorWithRed:((float)((rgbValue & 0xFF0000) >> 16))/255.0 green:((float)((rgbValue & 0xFF00) >> 8))/255.0 blue:((float)(rgbValue & 0xFF))/255.0 alpha:1.0]
 #define PLAYER_ONE 1
 #define PLAYER_TWO 2
 #define UNUSED_CELL 0
@@ -57,26 +56,30 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     layout.minimumInteritemSpacing = 0.5f;
     layout.minimumLineSpacing = 0.5f;
     
-    self.collectionView=[[UICollectionView alloc] initWithFrame:CGRectMake(0, 84, 290, 290) collectionViewLayout:layout];
+    float gridLength = 315.0f;
+    float gridTopMargin = 64.0f;
+    UIColor *labelColor = [GameBoard labelColor];
+    
+    self.collectionView=[[UICollectionView alloc] initWithFrame:CGRectMake(0, gridTopMargin, gridLength, gridLength) collectionViewLayout:layout];
     [self.collectionView setDataSource:self];
     [self.collectionView setDelegate:self];
     self.collectionView.center = CGPointMake(self.view.center.x, self.collectionView.center.y);
     
     [self.collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"cellIdentifier"];
-    [self.collectionView setBackgroundColor:UIColorFromRGB(0xFFFFFF)];
+    [self.collectionView setBackgroundColor:[UIColor whiteColor]];
     [self.view addSubview:self.collectionView];
     
-    self.currentPlayerLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, 44, 200, 44)];
+    self.currentPlayerLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, 25, 200, 44)];
     [self.currentPlayerLabel setText:@"Current player:"];
     [self.currentPlayerLabel setTextAlignment:NSTextAlignmentCenter];
-    [self.currentPlayerLabel setTextColor:[GameBoard labelColor]];
+    [self.currentPlayerLabel setTextColor:labelColor];
     self.currentPlayerLabel.center = CGPointMake(self.view.center.x, self.currentPlayerLabel.center.y);
     [self.view addSubview:self.currentPlayerLabel];
     
     self.startResetButton = [[UIButton alloc]initWithFrame:CGRectMake(0, 400, 200, 44)];
     [self.startResetButton setTitle:@"Start Game" forState:UIControlStateNormal];
     self.startResetButton.center = CGPointMake(self.view.center.x, self.startResetButton.center.y);
-    [self.startResetButton setTitleColor:[GameBoard labelColor] forState:UIControlStateNormal];
+    [self.startResetButton setTitleColor:labelColor forState:UIControlStateNormal];
     [self.startResetButton addTarget:self action:@selector(startGame) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.startResetButton];
     
@@ -85,13 +88,13 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
     self.JSONGetButton = [[UIButton alloc]initWithFrame:CGRectMake(0, 440, 100, 44)];
     [self.JSONGetButton setTitle:@"JSON Get" forState:UIControlStateNormal];
-    [self.JSONGetButton setTitleColor:[GameBoard labelColor] forState:UIControlStateNormal];
+    [self.JSONGetButton setTitleColor:labelColor forState:UIControlStateNormal];
     [self.JSONGetButton addTarget:self action:@selector(jsonTestGet) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.JSONGetButton];
     
     self.JSONPostButton = [[UIButton alloc]initWithFrame:CGRectMake(150, 440, 100, 44)];
     [self.JSONPostButton setTitle:@"JSON Post" forState:UIControlStateNormal];
-    [self.JSONPostButton setTitleColor:[GameBoard labelColor] forState:UIControlStateNormal];
+    [self.JSONPostButton setTitleColor:labelColor forState:UIControlStateNormal];
     [self.JSONPostButton addTarget:self action:@selector(jsonTestPost) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.JSONPostButton];
 }
@@ -126,6 +129,9 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     [self.indexPathArray addObject:indexPath];
     
     // add 0 to gamestate array
+    // match indexPath to gameStateArray and set color
+    int arrayIndex = [self convertIndexPathToInt:indexPath];
+    NSLog(@"cellForItemAtIndexPath: %i ", arrayIndex);
     [self.gameStateArray addObject:[NSNumber numberWithInt: UNUSED_CELL]];
     
 //    NSLog(@"cell tag: %i",cell.tag);
@@ -135,7 +141,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
 {
-    return CGSizeMake(27, 27);
+    return CGSizeMake(29.5, 29.5);
 }
 
 - (UIEdgeInsets) collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout insetForSectionAtIndex:(NSInteger)section
@@ -273,6 +279,8 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     manager.responseSerializer = [AFJSONResponseSerializer serializer];
     manager.requestSerializer = [AFJSONRequestSerializer serializer];
     
+    
+    //add game board array to params
     NSDictionary *parameters = @{@"id": @"123456",
                                  @"name": @"Christian"};
     
@@ -287,6 +295,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
               
               NSLog(@"gamestate: %@", [jsonDict objectForKey:@"board"]);
               NSArray *gameState = [jsonDict objectForKey:@"board"];
+              // rita upp spelet
               NSLog(@"gamestate length: %lu",(unsigned long)gameState.count);
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
