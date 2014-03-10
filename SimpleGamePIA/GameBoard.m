@@ -21,9 +21,10 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 @property (nonatomic, strong) NSMutableArray *indexPathArray;
 @property (nonatomic, strong) NSMutableArray *gameStateArray;
 
-
 @property (nonatomic, strong) UIButton *JSONGetButton;
 @property (nonatomic, strong) UIButton *JSONPostButton;
+
+@property (nonatomic) gameState gameState;
 
 @end
 
@@ -63,7 +64,6 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
     [self.collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"cellIdentifier"];
     [self.collectionView setBackgroundColor:UIColorFromRGB(0xFFFFFF)];
-    
     [self.view addSubview:self.collectionView];
     
     self.currentPlayerLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, 44, 200, 44)];
@@ -77,24 +77,31 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     [self.startResetButton setTitle:@"Start Game" forState:UIControlStateNormal];
     self.startResetButton.center = CGPointMake(self.view.center.x, self.startResetButton.center.y);
     [self.startResetButton setTitleColor:[GameBoard labelColor] forState:UIControlStateNormal];
+    [self.startResetButton addTarget:self action:@selector(startGame) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.startResetButton];
+    
+
+    // JSON TEST BUTTONS
     
     self.JSONGetButton = [[UIButton alloc]initWithFrame:CGRectMake(0, 440, 100, 44)];
     [self.JSONGetButton setTitle:@"JSON Get" forState:UIControlStateNormal];
-//    self.JSONGetButton.center = CGPointMake(self.view.center.x, self.JSONGetButton.center.y);
     [self.JSONGetButton setTitleColor:[GameBoard labelColor] forState:UIControlStateNormal];
-    [self.view addSubview:self.JSONGetButton];
     [self.JSONGetButton addTarget:self action:@selector(jsonTestGet) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:self.JSONGetButton];
     
     self.JSONPostButton = [[UIButton alloc]initWithFrame:CGRectMake(150, 440, 100, 44)];
     [self.JSONPostButton setTitle:@"JSON Post" forState:UIControlStateNormal];
-//    self.JSONPostButton.center = CGPointMake(self.view.center.x, self.JSONPostButton.center.y);
     [self.JSONPostButton setTitleColor:[GameBoard labelColor] forState:UIControlStateNormal];
-    [self.view addSubview:self.JSONPostButton];
     [self.JSONPostButton addTarget:self action:@selector(jsonTestPost) forControlEvents:UIControlEventTouchUpInside];
-    
+    [self.view addSubview:self.JSONPostButton];
 }
 
+-(void)startGame
+{
+    self.gameState = gameOngoing;
+    //CALL SERVER
+    //DRAW BOARD FROM GAME BOARD ARRAY
+}
 
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
@@ -280,7 +287,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
               
               NSLog(@"gamestate: %@", [jsonDict objectForKey:@"board"]);
               NSArray *gameState = [jsonDict objectForKey:@"board"];
-              NSLog(@"gamestate length: %i",gameState.count);
+              NSLog(@"gamestate length: %lu",(unsigned long)gameState.count);
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         NSLog(@"Error: %@", error);
