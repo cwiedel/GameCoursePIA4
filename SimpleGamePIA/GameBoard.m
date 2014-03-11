@@ -30,6 +30,8 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 @property (nonatomic) NSString *gameId;
 @property (nonatomic) NSString *userId;
 
+@property (nonatomic) NSDictionary *testResponseJSON;
+
 
 
 @end
@@ -50,7 +52,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
     self.indexPathArray = [[NSMutableArray alloc]init];
     self.gameStateArray = [[NSMutableArray alloc]init];         // LOAD FROM API
-
+    
     [super viewDidLoad];
 }
 
@@ -117,8 +119,16 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     self.gameState = gameOngoing;
     int randomUserId = arc4random() % 999999;
     self.userId = [NSString stringWithFormat:@"%i",randomUserId];
+    NSLog(@"generated userID: %@",self.userId);
     //CALL SERVER
     //DRAW BOARD FROM GAME BOARD ARRAY
+    
+    
+    NSDictionary *testValidJson = @{@"board": self.gameStateArray};
+    
+    NSLog(@"testValidJson: %@", testValidJson);
+    
+    
 }
 
 
@@ -312,14 +322,14 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
               NSLog(@"jsonTestPost: %@", responseObject);
 
               NSError *e;
-              NSDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:[operation.responseString dataUsingEncoding:NSUTF8StringEncoding]
+              self.testResponseJSON = [NSJSONSerialization JSONObjectWithData:[operation.responseString dataUsingEncoding:NSUTF8StringEncoding]
                                                                        options:NSJSONReadingMutableContainers error:&e];
               
               //NSLog(@"gamestate: %@", [jsonDict objectForKey:@"board"]);
-              NSArray *gameState = [jsonDict objectForKey:@"board"];
-              NSString *gameId = [jsonDict objectForKey:@"id"];
+              NSArray *gameState = [self.testResponseJSON objectForKey:@"board"];
+              NSString *gameId = [self.testResponseJSON objectForKey:@"id"];
               self.gameId = gameId;
-              NSString *currentPlayer = [jsonDict objectForKey:@"currentPlayer"];
+              NSString *currentPlayer = [self.testResponseJSON objectForKey:@"currentPlayer"];
               
               int foo = [currentPlayer intValue];
               
@@ -336,40 +346,26 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 - (void)jsonTestPostWithGameId
 {
     
-
-    /* requires:
-     gameState.id && gameState.boardColumns
-    && gameState.board && gameState.currentPlayer
-    && gameState.players
-     */
-    
+    NSData* data = [NSJSONSerialization dataWithJSONObject:self.testResponseJSON
+                                                   options:NSJSONWritingPrettyPrinted error:Nil];
     NSString *URLWithId = [NSString stringWithFormat:@"%@%@", BaseURLString, self.gameId];
+    NSString* aStr;
+    aStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     
-    AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
+    [request setURL:[NSURL URLWithString:URLWithId]];
+    [request setHTTPMethod:@"POST"];
+    [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+    [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    [request setHTTPBody:[aStr dataUsingEncoding:NSUTF8StringEncoding]];
     
-    manager.responseSerializer = [AFJSONResponseSerializer serializer];
-    manager.requestSerializer = [AFJSONRequestSerializer serializer];
+    NSLog(@"Data: %@",aStr);
     
-    
-    //add game board array to params
-    NSDictionary *parameters = @{@"id": self.userId,
-                                 @"name": @"Christian",
-                                 @"boardColumns": @"10",
-                                 @"board": @"",
-                                 @"currentPlayer": @"",
-                                 @"players": @""};
-    
-    
-    [manager POST:URLWithId
-       parameters:parameters
-          success:^(AFHTTPRequestOperation *operation, id responseObject) {
-              NSLog(@"jsonTestPostWithGameId: %@", responseObject);
-              
-              
-          } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-              NSLog(@"Error: %@", error);
-          }];
-    
+    NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
+    [connection start];
+
+  
+     
 }
 
 
