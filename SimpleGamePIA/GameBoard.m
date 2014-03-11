@@ -27,12 +27,14 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 
 @property (nonatomic) gameState gameState;
 
+@property (nonatomic) NSArray *gameBoard;
 @property (nonatomic) NSString *gameId;
 @property (nonatomic) NSString *userId;
+@property (nonatomic) NSString *boardColumns;
+@property (nonatomic) NSString *currPlayer;
+@property (nonatomic) NSArray *players;
 
-@property (nonatomic) NSDictionary *testResponseJSON;
-
-
+@property (nonatomic) NSDictionary *JSONResponse;
 
 @end
 
@@ -48,10 +50,15 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 {
     self.currentPlayer = PLAYER_ONE;
 
-    [self setupUI];
     
     self.indexPathArray = [[NSMutableArray alloc]init];
     self.gameStateArray = [[NSMutableArray alloc]init];         // LOAD FROM API
+    
+    for(int i = 0; i<100; i++) {
+        [self.gameStateArray addObject:[NSNumber numberWithInt:UNUSED_CELL]];
+    }
+    
+    [self setupUI];
     
     [super viewDidLoad];
 }
@@ -131,6 +138,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
 }
 
+#pragma mark Collection view functions
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
@@ -148,8 +156,6 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 {
     UICollectionViewCell *cell=[collectionView dequeueReusableCellWithReuseIdentifier:@"cellIdentifier" forIndexPath:indexPath];
     
-    cell.backgroundColor = [GameBoard unusedTileColor];
-    
     // Add each cell's index path to the indexPath array
     [self.indexPathArray addObject:indexPath];
     
@@ -157,9 +163,18 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     // match indexPath to gameStateArray and set color
     int arrayIndex = [self convertIndexPathToInt:indexPath];
     NSLog(@"cellForItemAtIndexPath: %i ", arrayIndex);
-    [self.gameStateArray addObject:[NSNumber numberWithInt: UNUSED_CELL]];
     
-//    NSLog(@"cell tag: %i",cell.tag);
+    if([[self.gameStateArray objectAtIndex:arrayIndex] isEqualToNumber:[NSNumber numberWithInt:UNUSED_CELL]]){
+        cell.backgroundColor = [GameBoard unusedTileColor];
+        [cell setTag:UNUSED_CELL];
+    }else if([[self.gameStateArray objectAtIndex:arrayIndex] isEqualToNumber:[NSNumber numberWithInt:PLAYER_ONE]]){
+        cell.backgroundColor = [GameBoard playerOneColor];
+        [cell setTag:PLAYER_ONE];
+    }else if([[self.gameStateArray objectAtIndex:arrayIndex] isEqualToNumber:[NSNumber numberWithInt:PLAYER_TWO]]){
+        cell.backgroundColor = [GameBoard playerTwoColor];
+        [cell setTag:PLAYER_TWO];
+    }
+    
     
     return cell;
 }
@@ -231,8 +246,6 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 
 -(BOOL)checkIfPlayerWon {
     
-//    NSLog(@"%@",self.gameStateArray);
-    
     //VERTICALLY
     for(int column = 0; column < NUMBER_OF_COLUMNS; column++) {
         int consecutiveCells = 0;
@@ -277,12 +290,12 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
         }
     }
     
-    
     return false;
 }
 
+#pragma mark JSON functions
 
-- (void)jsonTestGet
+- (void)getJSON
 {
     AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
     manager.responseSerializer = [AFJSONResponseSerializer serializer];
@@ -294,6 +307,14 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
     [manager GET:URLWithId parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
         NSLog(@"jsonTestGet: %@", responseObject);
+        
+        NSError *e;
+        NSDictionary *JSONResp = [NSJSONSerialization JSONObjectWithData:[operation.responseString dataUsingEncoding:NSUTF8StringEncoding]
+                                                                options:NSJSONReadingMutableContainers error:&e];
+        
+        self.gameStateArray = [JSONResp objectForKey:@"board"];
+        [self.collectionView reloadData];
+        
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         NSLog(@"Error: %@", error);
     }];
@@ -301,9 +322,9 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 }
 
 
-- (void)jsonTestPost
+- (void)postJSON
 {
-    
+
     //Post first to get a game id
     
     AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
@@ -311,52 +332,30 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     manager.responseSerializer = [AFJSONResponseSerializer serializer];
     manager.requestSerializer = [AFJSONRequestSerializer serializer];
     
-    
-    
     //add game board array to params
     NSDictionary *parameters = @{@"id": self.userId,
                                  @"name": @"Christian"};
     
-
-    [manager POST:@"http://localhost:4730/game/"
+    [manager POST:BaseURLString
        parameters:parameters
           success:^(AFHTTPRequestOperation *operation, id responseObject) {
               NSLog(@"jsonTestPost: %@", responseObject);
 
               NSError *e;
-              self.testResponseJSON = [NSJSONSerialization JSONObjectWithData:[operation.responseString dataUsingEncoding:NSUTF8StringEncoding]
+              self.JSONResponse = [NSJSONSerialization JSONObjectWithData:[operation.responseString dataUsingEncoding:NSUTF8StringEncoding]
                                                                        options:NSJSONReadingMutableContainers error:&e];
-              
-              //NSLog(@"gamestate: %@", [jsonDict objectForKey:@"board"]);
-              NSArray *gameState = [self.testResponseJSON objectForKey:@"board"];
-              NSString *gameId = [self.testResponseJSON objectForKey:@"id"];
-              self.gameId = gameId;
-              NSString *currentPlayer = [self.testResponseJSON objectForKey:@"currentPlayer"];
-              
-              int foo = [currentPlayer intValue];
-              
-              NSLog(@"gameid: %@, currentPlayer: %@",gameId, currentPlayer);
-              // rita upp spelet
-             // NSLog(@"gamestate length: %lu",(unsigned long)gameState.count);
-        
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+              [self parseJSONData];
+
+          } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         NSLog(@"Error: %@", error);
     }];
 
 }
 
-- (void)jsonTestPostWithGameId
+- (void)postJSONWithID
 {
-//    "board":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"id":19,"boardColumns":10,"currentPlayer":"826838","players":[{"id":"826838","name":"Christian"},{"id":"13091","name":"Christian"}]
     
-    
-    NSDictionary *JSONToPost = @{@"board": self.gameStateArray,
-                                 @"id": self.gameId,
-                                 @"boardColumns": @"10",
-                                 @"currentPlayer": self.userId,
-                                 @"players":@[@{@"id":self.gameId, @"name":@"Christian"}, @{@"id":@"345833",@"name":@"Erik"}]
-                                 };
-    
+    NSDictionary *JSONToPost = [self getJSONDataToPost];
     NSData* data = [NSJSONSerialization dataWithJSONObject:JSONToPost
                                                    options:NSJSONWritingPrettyPrinted error:Nil];
     
@@ -375,9 +374,26 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
     NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
     [connection start];
+}
 
-  
-     
+-(void)parseJSONData
+{
+    self.gameBoard = [self.JSONResponse objectForKey:@"board"];
+    self.gameId = [self.JSONResponse objectForKey:@"id"];
+    self.boardColumns = [self.JSONResponse objectForKey:@"boardColumns"];
+    self.currPlayer = [self.JSONResponse objectForKey:@"currentPlayer"];
+    self.players = [self.JSONResponse objectForKey:@"players"];
+}
+
+-(NSDictionary*)getJSONDataToPost
+{
+    NSDictionary *JSONToPost = @{@"board": self.gameStateArray,
+                                 @"id": self.gameId,
+                                 @"boardColumns": self.boardColumns,
+                                 @"currentPlayer": self.userId,
+                                 @"players":@[@{@"id":self.gameId, @"name":@"Christian"}, @{@"id":@"345833",@"name":@"Erik"}]
+                                 };
+    return JSONToPost;
 }
 
 
