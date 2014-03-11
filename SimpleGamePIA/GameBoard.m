@@ -300,6 +300,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
 }
 
+
 - (void)jsonTestPost
 {
     
@@ -309,6 +310,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
     manager.responseSerializer = [AFJSONResponseSerializer serializer];
     manager.requestSerializer = [AFJSONRequestSerializer serializer];
+    
     
     
     //add game board array to params
@@ -345,9 +347,19 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 
 - (void)jsonTestPostWithGameId
 {
+//    "board":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"id":19,"boardColumns":10,"currentPlayer":"826838","players":[{"id":"826838","name":"Christian"},{"id":"13091","name":"Christian"}]
     
-    NSData* data = [NSJSONSerialization dataWithJSONObject:self.testResponseJSON
+    
+    NSDictionary *JSONToPost = @{@"board": self.gameStateArray,
+                                 @"id": self.gameId,
+                                 @"boardColumns": @"10",
+                                 @"currentPlayer": self.userId,
+                                 @"players":@[@{@"id":self.gameId, @"name":@"Christian"}, @{@"id":@"345833",@"name":@"Erik"}]
+                                 };
+    
+    NSData* data = [NSJSONSerialization dataWithJSONObject:JSONToPost
                                                    options:NSJSONWritingPrettyPrinted error:Nil];
+    
     NSString *URLWithId = [NSString stringWithFormat:@"%@%@", BaseURLString, self.gameId];
     NSString* aStr;
     aStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
