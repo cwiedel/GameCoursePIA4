@@ -23,8 +23,14 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 
 @property (nonatomic, strong) UIButton *JSONGetButton;
 @property (nonatomic, strong) UIButton *JSONPostButton;
+@property (nonatomic, strong) UIButton *JSONPostWithIDButton;
 
 @property (nonatomic) gameState gameState;
+
+@property (nonatomic) NSString *gameId;
+@property (nonatomic) NSString *userId;
+
+
 
 @end
 
@@ -87,21 +93,30 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     // JSON TEST BUTTONS
     
     self.JSONGetButton = [[UIButton alloc]initWithFrame:CGRectMake(0, 440, 100, 44)];
-    [self.JSONGetButton setTitle:@"JSON Get" forState:UIControlStateNormal];
+    [self.JSONGetButton setTitle:@"Get" forState:UIControlStateNormal];
     [self.JSONGetButton setTitleColor:labelColor forState:UIControlStateNormal];
     [self.JSONGetButton addTarget:self action:@selector(jsonTestGet) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.JSONGetButton];
     
-    self.JSONPostButton = [[UIButton alloc]initWithFrame:CGRectMake(150, 440, 100, 44)];
-    [self.JSONPostButton setTitle:@"JSON Post" forState:UIControlStateNormal];
+    self.JSONPostButton = [[UIButton alloc]initWithFrame:CGRectMake(80, 440, 100, 44)];
+    [self.JSONPostButton setTitle:@"Post" forState:UIControlStateNormal];
     [self.JSONPostButton setTitleColor:labelColor forState:UIControlStateNormal];
     [self.JSONPostButton addTarget:self action:@selector(jsonTestPost) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.JSONPostButton];
+    
+    self.JSONPostWithIDButton = [[UIButton alloc]initWithFrame:CGRectMake(200, 440, 100, 44)];
+    [self.JSONPostWithIDButton setTitle:@"Post w ID" forState:UIControlStateNormal];
+    [self.JSONPostWithIDButton setTitleColor:labelColor forState:UIControlStateNormal];
+    [self.JSONPostWithIDButton addTarget:self action:@selector(jsonTestPostWithGameId) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:self.JSONPostWithIDButton];
+    
 }
 
 -(void)startGame
 {
     self.gameState = gameOngoing;
+    int randomUserId = arc4random() % 999999;
+    self.userId = [NSString stringWithFormat:@"%i",randomUserId];
     //CALL SERVER
     //DRAW BOARD FROM GAME BOARD ARRAY
 }
@@ -224,6 +239,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
             if(consecutiveCells >= 5){
                 NSLog(@"SOMEONE WON VERTICALLY");
                 [self.currentPlayerLabel setText:@"SOMEONE WON!"];
+                self.gameState = gameVictory;
                 return true;
             }
         }
@@ -245,6 +261,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
             if(consecutiveCells >= 5){
                 NSLog(@"SOMEONE WON HORIZONTALLY");
                 [self.currentPlayerLabel setText:@"SOMEONE WON!"];
+                self.gameState = gameVictory;
                 return true;
             }
         }
@@ -261,8 +278,12 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     manager.responseSerializer = [AFJSONResponseSerializer serializer];
     manager.responseSerializer.acceptableContentTypes = [NSSet setWithObject:@"application/json"];
     
-    [manager GET:@"http://localhost:4730/game/16" parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
-        NSLog(@"JSON: %@", responseObject);
+    NSString *URLWithId = [NSString stringWithFormat:@"%@%@", BaseURLString, self.gameId];
+    
+    NSLog(@"%@", URLWithId);
+    
+    [manager GET:URLWithId parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        NSLog(@"jsonTestGet: %@", responseObject);
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         NSLog(@"Error: %@", error);
     }];
@@ -281,27 +302,75 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
     
     //add game board array to params
-    NSDictionary *parameters = @{@"id": @"123456",
+    NSDictionary *parameters = @{@"id": self.userId,
                                  @"name": @"Christian"};
     
 
     [manager POST:@"http://localhost:4730/game/"
        parameters:parameters
           success:^(AFHTTPRequestOperation *operation, id responseObject) {
+              NSLog(@"jsonTestPost: %@", responseObject);
 
               NSError *e;
               NSDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:[operation.responseString dataUsingEncoding:NSUTF8StringEncoding]
                                                                        options:NSJSONReadingMutableContainers error:&e];
               
-              NSLog(@"gamestate: %@", [jsonDict objectForKey:@"board"]);
+              //NSLog(@"gamestate: %@", [jsonDict objectForKey:@"board"]);
               NSArray *gameState = [jsonDict objectForKey:@"board"];
+              NSString *gameId = [jsonDict objectForKey:@"id"];
+              self.gameId = gameId;
+              NSString *currentPlayer = [jsonDict objectForKey:@"currentPlayer"];
+              
+              int foo = [currentPlayer intValue];
+              
+              NSLog(@"gameid: %@, currentPlayer: %@",gameId, currentPlayer);
               // rita upp spelet
-              NSLog(@"gamestate length: %lu",(unsigned long)gameState.count);
+             // NSLog(@"gamestate length: %lu",(unsigned long)gameState.count);
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         NSLog(@"Error: %@", error);
     }];
 
 }
+
+- (void)jsonTestPostWithGameId
+{
+    
+
+    /* requires:
+     gameState.id && gameState.boardColumns
+    && gameState.board && gameState.currentPlayer
+    && gameState.players
+     */
+    
+    NSString *URLWithId = [NSString stringWithFormat:@"%@%@", BaseURLString, self.gameId];
+    
+    AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
+    
+    manager.responseSerializer = [AFJSONResponseSerializer serializer];
+    manager.requestSerializer = [AFJSONRequestSerializer serializer];
+    
+    
+    //add game board array to params
+    NSDictionary *parameters = @{@"id": self.userId,
+                                 @"name": @"Christian",
+                                 @"boardColumns": @"10",
+                                 @"board": @"",
+                                 @"currentPlayer": @"",
+                                 @"players": @""};
+    
+    
+    [manager POST:URLWithId
+       parameters:parameters
+          success:^(AFHTTPRequestOperation *operation, id responseObject) {
+              NSLog(@"jsonTestPostWithGameId: %@", responseObject);
+              
+              
+          } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+              NSLog(@"Error: %@", error);
+          }];
+    
+}
+
 
 @end
