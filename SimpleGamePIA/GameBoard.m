@@ -37,6 +37,8 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 
 @property (nonatomic) NSDictionary *JSONResponse;
 
+@property (nonatomic, strong) NSTimer *getJSONTimer;
+
 @end
 
 #define PLAYER_ONE 1
@@ -132,7 +134,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
     [self postJSON];
     
-    NSTimer *getJSONTimer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(getJSON) userInfo:nil repeats:YES];
+    self.getJSONTimer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(getJSON) userInfo:nil repeats:YES];
 //    getJSONTimer
     
 }
@@ -184,7 +186,6 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
         [cell setTag:PLAYER_TWO];
     }
     
-    
     return cell;
 }
 
@@ -193,7 +194,6 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 {
     // If you need to use the touched cell, you can retrieve it like so
     UICollectionViewCell *cell = [collectionView cellForItemAtIndexPath:indexPath];
-    
     
     if(self.gameState == gameOngoing && cell.tag == UNUSED_CELL){
         
@@ -211,49 +211,17 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
         
 //        self.currentPlayer = PLAYER_TWO;
         //        [self.currentPlayerLabel setText:@"Player TWO"];
-        [self checkIfPlayerWon];
+        
         int position = [self convertIndexPathToInt:indexPath];
         [self.gameStateArray replaceObjectAtIndex:position withObject:[NSNumber numberWithInt: self.currentPlayer]];
         [self postJSONWithID];
+        [self checkIfPlayerWon];
         
         //start get calls to server
         
     }
-    
-/*
-    switch (self.currentPlayer) {
-        case PLAYER_ONE:
-            if(cell.tag == UNUSED_CELL) {
-                [cell setBackgroundColor:[GameBoard playerOneColor]];
-                [cell setTag: PLAYER_ONE];
-                self.currentPlayer = PLAYER_TWO;
-                [self.currentPlayerLabel setText:@"Player TWO"];
-                [self checkIfPlayerWon];
-                int position = [self convertIndexPathToInt:indexPath];
-                [self.gameStateArray replaceObjectAtIndex:position withObject:[NSNumber numberWithInt: PLAYER_ONE]];
-                [self postJSONWithID];
-//                NSLog(@"foo: %@", self.gameStateArray[position]);
-            }
-            break;
-        case PLAYER_TWO:
-            if(cell.tag == UNUSED_CELL) {
-                [cell setBackgroundColor:[GameBoard playerTwoColor]];
-                [cell setTag: PLAYER_TWO];
-                self.currentPlayer = PLAYER_ONE;
-                [self.currentPlayerLabel setText:@"Player ONE"];
-                [self checkIfPlayerWon];
-                int position = [self convertIndexPathToInt:indexPath];
-                [self.gameStateArray replaceObjectAtIndex:position withObject:[NSNumber numberWithInt: PLAYER_TWO]];
-//                NSLog(@"foo: %@", self.gameStateArray[position]);
-            }
-            break;
-        default:
-            break;
-    }
-*/
-    
-    //NSLog(@"touched cell %@ at indexPath %@", cell, indexPath);
 }
+
 -(int)getTagForCellAtIndexPath:(int) column atRow:(int) row {
     
     NSIndexPath *cellTagtoFetch = [NSIndexPath indexPathForRow:row inSection:column];
@@ -276,20 +244,29 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
     //VERTICALLY
     for(int column = 0; column < NUMBER_OF_COLUMNS; column++) {
-        int consecutiveCells = 0;
+        int consecutiveCellsPlayerOne = 0;
+        int consecutiveCellsPlayerTwo = 0;
         for(int row = 0; row < NUMBER_OF_ROWS; row++) {
             int tag = [self getTagForCellAtIndexPath: column atRow:row];
-            if(tag == self.currentPlayer) {
-                consecutiveCells++;
-                NSLog(@"cons cells: %i", consecutiveCells);
-               // NSLog(@"cell tag: %i", tag);
+            if(tag == PLAYER_ONE) {
+                consecutiveCellsPlayerOne++;
+                NSLog(@"cons cells: %i", consecutiveCellsPlayerOne);
+            }else if(tag == PLAYER_TWO ) {
+                consecutiveCellsPlayerTwo++;
+                NSLog(@"cons cells: %i", consecutiveCellsPlayerOne);
             }else {
-                consecutiveCells = 0;
+                consecutiveCellsPlayerOne = 0;
+                consecutiveCellsPlayerTwo = 0;
             }
             
-            if(consecutiveCells >= 5){
-                NSLog(@"SOMEONE WON VERTICALLY");
-                [self.currentPlayerLabel setText:@"SOMEONE WON!"];
+            if(consecutiveCellsPlayerOne >= 5){
+                NSLog(@"PLAYER ONE WON");
+                [self.currentPlayerLabel setText:@"PLAYER ONE WON!"];
+                self.gameState = gameVictory;
+                return true;
+            }else if(consecutiveCellsPlayerTwo >= 5){
+                NSLog(@"PLAYER TWO WON");
+                [self.currentPlayerLabel setText:@"PLAYER TWO WON!"];
                 self.gameState = gameVictory;
                 return true;
             }
@@ -298,20 +275,29 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
     //HORIZONTALLY
     for(int column = 0; column < NUMBER_OF_COLUMNS; column++) {
-        int consecutiveCells = 0;
+        int consecutiveCellsPlayerOne = 0;
+        int consecutiveCellsPlayerTwo = 0;
         for(int row = 0; row < NUMBER_OF_ROWS; row++) {
             int tag = [self getTagForCellAtIndexPath: row atRow:column];
-            if(tag == self.currentPlayer) {
-                consecutiveCells++;
-//                NSLog(@"cons cells: %i", consecutiveCells);
-                NSLog(@"cell tag: %i", tag);
+            if(tag == PLAYER_ONE) {
+                consecutiveCellsPlayerOne++;
+                NSLog(@"cons cells: %i", consecutiveCellsPlayerOne);
+            }else if(tag == PLAYER_TWO ) {
+                consecutiveCellsPlayerTwo++;
+                NSLog(@"cons cells: %i", consecutiveCellsPlayerOne);
             }else {
-                consecutiveCells = 0;
+                consecutiveCellsPlayerOne = 0;
+                consecutiveCellsPlayerTwo = 0;
             }
             
-            if(consecutiveCells >= 5){
-                NSLog(@"SOMEONE WON HORIZONTALLY");
-                [self.currentPlayerLabel setText:@"SOMEONE WON!"];
+            if(consecutiveCellsPlayerOne >= 5){
+                NSLog(@"PLAYER ONE WON");
+                [self.currentPlayerLabel setText:@"PLAYER ONE WON!"];
+                self.gameState = gameVictory;
+                return true;
+            }else if(consecutiveCellsPlayerTwo >= 5){
+                NSLog(@"PLAYER TWO WON");
+                [self.currentPlayerLabel setText:@"PLAYER TWO WON!"];
                 self.gameState = gameVictory;
                 return true;
             }
@@ -342,18 +328,17 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
              NSDictionary *JSONResp = [NSJSONSerialization JSONObjectWithData:[operation.responseString dataUsingEncoding:NSUTF8StringEncoding]
                                                                       options:NSJSONReadingMutableContainers error:&e];
              
+             BOOL gameStateHasntChanged = [self.gameStateArray isEqualToArray:[JSONResp objectForKey:@"board"]];
              
-             BOOL gameStateChanged = [self.gameStateArray isEqualToArray:[JSONResp objectForKey:@"board"]];
-             
-             NSLog(@"gameStateChanged: %hhd",gameStateChanged);
-             
-             self.gameStateArray = [JSONResp objectForKey:@"board"];
-             [self.collectionView reloadData];
-             
+             if(!gameStateHasntChanged){
+                 self.gameStateArray = [JSONResp objectForKey:@"board"];
+                 [self checkIfPlayerWon];
+                 [self.collectionView reloadData];
+             }
+         
          } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
              NSLog(@"Error: %@", error);
          }];
-    
 }
 
 
