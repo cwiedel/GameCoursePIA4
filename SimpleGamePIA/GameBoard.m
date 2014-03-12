@@ -30,6 +30,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 @property (nonatomic) NSArray *gameBoard;
 @property (nonatomic) NSString *gameId;
 @property (nonatomic) NSString *userId;
+@property (nonatomic) NSString *opponentId;
 @property (nonatomic) NSString *boardColumns;
 @property (nonatomic) NSString *currPlayer;
 @property (nonatomic) NSArray *players;
@@ -129,11 +130,13 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     NSLog(@"generated userID: %@",self.userId);
     //CALL SERVER
     //DRAW BOARD FROM GAME BOARD ARRAY
+    [self postJSON];
     
     
-    NSDictionary *testValidJson = @{@"board": self.gameStateArray};
     
-    NSLog(@"testValidJson: %@", testValidJson);
+//    NSDictionary *testValidJson = @{@"board": self.gameStateArray};
+    
+//    NSLog(@"testValidJson: %@", testValidJson);
     
     
 }
@@ -197,13 +200,24 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
     
     if(self.gameState == gameOngoing && cell.tag == UNUSED_CELL){
-        [cell setBackgroundColor:[GameBoard playerOneColor]];
-        [cell setTag: PLAYER_ONE];
-        self.currentPlayer = PLAYER_TWO;
+        
+        [cell setTag: self.currentPlayer];
+        
+        switch (self.currentPlayer) {
+            case PLAYER_ONE:
+                [cell setBackgroundColor:[GameBoard playerOneColor]];
+                break;
+            case PLAYER_TWO:
+                [cell setBackgroundColor:[GameBoard playerTwoColor]];
+            default:
+                break;
+        }
+        
+//        self.currentPlayer = PLAYER_TWO;
         //        [self.currentPlayerLabel setText:@"Player TWO"];
         [self checkIfPlayerWon];
         int position = [self convertIndexPathToInt:indexPath];
-        [self.gameStateArray replaceObjectAtIndex:position withObject:[NSNumber numberWithInt: PLAYER_ONE]];
+        [self.gameStateArray replaceObjectAtIndex:position withObject:[NSNumber numberWithInt: self.currentPlayer]];
         [self postJSONWithID];
         
         //start get calls to server
@@ -404,6 +418,27 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     self.boardColumns = [self.JSONResponse objectForKey:@"boardColumns"];
     self.currPlayer = [self.JSONResponse objectForKey:@"currentPlayer"];
     self.players = [self.JSONResponse objectForKey:@"players"];
+    
+    switch (self.players.count) {
+        case PLAYER_ONE:
+            self.currentPlayer = PLAYER_ONE;
+            [self.players[0] setObject:@"PLAYER ONE" forKey:@"name"];
+            [self.players[0] setObject:self.userId forKey:@"id"];
+            break;
+        case PLAYER_TWO:
+            self.currentPlayer = PLAYER_TWO;
+            self.opponentId = [self.players[1] objectForKey:@"id"];
+            [self.players[1] setObject:@"PLAYER TWO" forKey:@"name"];
+            [self.players[1] setObject:self.opponentId forKey:@"id"];
+            break;
+        default:
+            break;
+    }
+    
+    NSLog(@"parseJSONData currPlayer: %@, opponentID: %@",self.currPlayer, self.opponentId);
+    NSLog(@"parseJSONData players: %i",self.players.count);
+    
+    
 }
 
 -(NSDictionary*)getJSONDataToPost
@@ -412,7 +447,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
                                  @"id": self.gameId,
                                  @"boardColumns": self.boardColumns,
                                  @"currentPlayer": self.userId,
-                                 @"players":@[@{@"id":self.gameId, @"name":@"Christian"}, @{@"id":@"345833",@"name":@"Erik"}]
+                                 @"players":self.players
                                  };
     return JSONToPost;
 }
