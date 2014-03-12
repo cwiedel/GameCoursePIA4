@@ -127,17 +127,13 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     self.gameState = gameOngoing;
     int randomUserId = arc4random() % 999999;
     self.userId = [NSString stringWithFormat:@"%i",randomUserId];
+    
     NSLog(@"generated userID: %@",self.userId);
-    //CALL SERVER
-    //DRAW BOARD FROM GAME BOARD ARRAY
+    
     [self postJSON];
     
-    
-    
-//    NSDictionary *testValidJson = @{@"board": self.gameStateArray};
-    
-//    NSLog(@"testValidJson: %@", testValidJson);
-    
+    NSTimer *getJSONTimer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(getJSON) userInfo:nil repeats:YES];
+//    getJSONTimer
     
 }
 
@@ -345,6 +341,11 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
              NSError *e;
              NSDictionary *JSONResp = [NSJSONSerialization JSONObjectWithData:[operation.responseString dataUsingEncoding:NSUTF8StringEncoding]
                                                                       options:NSJSONReadingMutableContainers error:&e];
+             
+             
+             BOOL gameStateChanged = [self.gameStateArray isEqualToArray:[JSONResp objectForKey:@"board"]];
+             
+             NSLog(@"gameStateChanged: %hhd",gameStateChanged);
              
              self.gameStateArray = [JSONResp objectForKey:@"board"];
              [self.collectionView reloadData];
