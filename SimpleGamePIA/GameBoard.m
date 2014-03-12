@@ -109,19 +109,19 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     [self.JSONGetButton setTitle:@"Get" forState:UIControlStateNormal];
     [self.JSONGetButton setTitleColor:labelColor forState:UIControlStateNormal];
     [self.JSONGetButton addTarget:self action:@selector(getJSON) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:self.JSONGetButton];
+//    [self.view addSubview:self.JSONGetButton];
     
     self.JSONPostButton = [[UIButton alloc]initWithFrame:CGRectMake(80, 440, 100, 44)];
     [self.JSONPostButton setTitle:@"Post" forState:UIControlStateNormal];
     [self.JSONPostButton setTitleColor:labelColor forState:UIControlStateNormal];
     [self.JSONPostButton addTarget:self action:@selector(postJSON) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:self.JSONPostButton];
+//    [self.view addSubview:self.JSONPostButton];
     
     self.JSONPostWithIDButton = [[UIButton alloc]initWithFrame:CGRectMake(200, 440, 100, 44)];
     [self.JSONPostWithIDButton setTitle:@"Post w ID" forState:UIControlStateNormal];
     [self.JSONPostWithIDButton setTitleColor:labelColor forState:UIControlStateNormal];
     [self.JSONPostWithIDButton addTarget:self action:@selector(postJSONWithID) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:self.JSONPostWithIDButton];
+//    [self.view addSubview:self.JSONPostWithIDButton];
     
 }
 
@@ -203,6 +203,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
         
         [cell setTag: self.currentPlayer];
         self.yourTurn = NO;
+        [self.currentPlayerLabel setText:@"Waiting for opponent"];
         
         switch (self.currentPlayer) {
             case PLAYER_ONE:
@@ -215,7 +216,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
         }
         
 //        self.currentPlayer = PLAYER_TWO;
-        //        [self.currentPlayerLabel setText:@"Player TWO"];
+        //
         
         int position = [self convertIndexPathToInt:indexPath];
         [self.gameStateArray replaceObjectAtIndex:position withObject:[NSNumber numberWithInt: self.currentPlayer]];
@@ -344,6 +345,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
                  
                  if(![self checkIfPlayerWon]){
                     self.yourTurn = YES;
+                     [self.currentPlayerLabel setText:@"Your turn"];
                  }
                  [self.collectionView reloadData];
              }
