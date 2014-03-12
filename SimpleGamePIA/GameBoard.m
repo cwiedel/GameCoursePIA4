@@ -26,6 +26,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 @property (nonatomic, strong) UIButton *JSONPostWithIDButton;
 
 @property (nonatomic) gameState gameState;
+@property (nonatomic) BOOL yourTurn;
 
 @property (nonatomic) NSArray *gameBoard;
 @property (nonatomic) NSString *gameId;
@@ -131,6 +132,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     self.userId = [NSString stringWithFormat:@"%i",randomUserId];
     
     NSLog(@"generated userID: %@",self.userId);
+    self.yourTurn = YES;
     
     [self postJSON];
     
@@ -162,6 +164,8 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 {
     return UIEdgeInsetsMake(0, 1, 0, 1);
 }
+
+#pragma mark Draw the cells
 
 // The cell that is returned must be retrieved from a call to -dequeueReusableCellWithReuseIdentifier:forIndexPath:
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
@@ -195,9 +199,10 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     // If you need to use the touched cell, you can retrieve it like so
     UICollectionViewCell *cell = [collectionView cellForItemAtIndexPath:indexPath];
     
-    if(self.gameState == gameOngoing && cell.tag == UNUSED_CELL){
+    if(self.gameState == gameOngoing && cell.tag == UNUSED_CELL && self.yourTurn){
         
         [cell setTag: self.currentPlayer];
+        self.yourTurn = NO;
         
         switch (self.currentPlayer) {
             case PLAYER_ONE:
@@ -263,11 +268,13 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
                 NSLog(@"PLAYER ONE WON");
                 [self.currentPlayerLabel setText:@"PLAYER ONE WON!"];
                 self.gameState = gameVictory;
+                [self.getJSONTimer invalidate];
                 return true;
             }else if(consecutiveCellsPlayerTwo >= 5){
                 NSLog(@"PLAYER TWO WON");
                 [self.currentPlayerLabel setText:@"PLAYER TWO WON!"];
                 self.gameState = gameVictory;
+                [self.getJSONTimer invalidate];
                 return true;
             }
         }
@@ -294,11 +301,13 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
                 NSLog(@"PLAYER ONE WON");
                 [self.currentPlayerLabel setText:@"PLAYER ONE WON!"];
                 self.gameState = gameVictory;
+                [self.getJSONTimer invalidate];
                 return true;
             }else if(consecutiveCellsPlayerTwo >= 5){
                 NSLog(@"PLAYER TWO WON");
                 [self.currentPlayerLabel setText:@"PLAYER TWO WON!"];
                 self.gameState = gameVictory;
+                [self.getJSONTimer invalidate];
                 return true;
             }
         }
@@ -332,13 +341,17 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
              
              if(!gameStateHasntChanged){
                  self.gameStateArray = [JSONResp objectForKey:@"board"];
-                 [self checkIfPlayerWon];
+                 
+                 if(![self checkIfPlayerWon]){
+                    self.yourTurn = YES;
+                 }
                  [self.collectionView reloadData];
              }
          
          } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
              NSLog(@"Error: %@", error);
          }];
+    [self checkIfPlayerWon];
 }
 
 
