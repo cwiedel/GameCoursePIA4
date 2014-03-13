@@ -83,7 +83,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     layout.minimumLineSpacing = 0.5f;
     
     float gridLength = 315.0f;
-    float gridTopMargin = 74.0f;
+    float gridTopMargin = 68.0f;
     UIColor *labelColor = [GameBoard labelColor];
     
     self.collectionView=[[UICollectionView alloc] initWithFrame:CGRectMake(0, gridTopMargin, gridLength, gridLength) collectionViewLayout:layout];
@@ -99,24 +99,30 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     [headerView setBackgroundColor:[GameBoard playerOneColor]];
     [self.view addSubview:headerView];
     
+    UIFont *smallFont = [UIFont fontWithName: @"AvenirNextCondensed-Regular" size:22];
+    
     self.currentPlayerLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, 30.0f, 320.0f, 24)];
-    [self.currentPlayerLabel setText:@"Current player:"];
+    [self.currentPlayerLabel setText:@"Five in a row"];
     [self.currentPlayerLabel setTextAlignment:NSTextAlignmentCenter];
     [self.currentPlayerLabel setTextColor:[UIColor whiteColor]];
+    [self.currentPlayerLabel setFont:smallFont];
 //    [self.currentPlayerLabel setBackgroundColor:[GameBoard playerOneColor]];
     self.currentPlayerLabel.center = CGPointMake(self.view.center.x, self.currentPlayerLabel.center.y);
     [self.view addSubview:self.currentPlayerLabel];
     
-    self.startResetButton = [[UIButton alloc]initWithFrame:CGRectMake(0, 400, gridLength, 50)];
+    
+    self.startResetButton = [[UIButton alloc]initWithFrame:CGRectMake(0, 400, 200.0f, 50)];
     [self.startResetButton setTitle:@"Start Game" forState:UIControlStateNormal];
+    [self.startResetButton.titleLabel setFont:smallFont];
     self.startResetButton.center = CGPointMake(self.view.center.x, self.startResetButton.center.y);
     [self.startResetButton setBackgroundColor:[GameBoard playerOneColor]];
     [self.startResetButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [self.startResetButton addTarget:self action:@selector(startGame) forControlEvents:UIControlEventTouchUpInside];
+    self.startResetButton.layer.cornerRadius = 5.0f;
     [self.view addSubview:self.startResetButton];
 
     // JSON TEST BUTTONS
-    
+/*
     self.JSONGetButton = [[UIButton alloc]initWithFrame:CGRectMake(0, 440, 100, 44)];
     [self.JSONGetButton setTitle:@"Get" forState:UIControlStateNormal];
     [self.JSONGetButton setTitleColor:labelColor forState:UIControlStateNormal];
@@ -134,7 +140,8 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     [self.JSONPostWithIDButton setTitleColor:labelColor forState:UIControlStateNormal];
     [self.JSONPostWithIDButton addTarget:self action:@selector(postJSONWithID) forControlEvents:UIControlEventTouchUpInside];
 //    [self.view addSubview:self.JSONPostWithIDButton];
-    
+*/
+ 
 }
 
 -(void)startGame
@@ -145,8 +152,8 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
     NSLog(@"generated userID: %@",self.userId);
     self.yourTurn = YES;
-    [self.currentPlayerLabel setText:@"New game"];
-    
+    [self.currentPlayerLabel setText:@"New game!"];
+    [self.startResetButton setTitle:@"Start New Game" forState:UIControlStateNormal];
     [self postJSON];
     
     self.getJSONTimer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(getJSON) userInfo:nil repeats:YES];
@@ -228,29 +235,20 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
                 break;
         }
         
-//        self.currentPlayer = PLAYER_TWO;
-        //
-        
         int position = [self convertIndexPathToInt:indexPath];
         [self.gameStateArray replaceObjectAtIndex:position withObject:[NSNumber numberWithInt: self.currentPlayer]];
         [self postJSONWithID];
         NSLog(@"Clicked cell at position: %i", position);
-//        [self checkIfPlayerWon];
-        
-        [self checkGameStateForWinner:self.currentPlayer];
-    
-        
-        //start get calls to server
-        
-    }
+        if([self checkGameStateForWinner:self.currentPlayer]){
+            [self.getJSONTimer invalidate];
+        }
+     }
 }
 
--(int)getTagForCellAtIndexPath:(int) column atRow:(int) row {
-    
+-(int)getTagForCellAtIndexPath:(int) column atRow:(int) row
+{
     NSIndexPath *cellTagtoFetch = [NSIndexPath indexPathForRow:row inSection:column];
-
     UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:cellTagtoFetch];
-    
     return cell.tag;
 }
 
@@ -262,10 +260,6 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 //    NSLog(@"arrayInt: %i", arrayInt );
     return arrayInt;
 }
-
-
-// checkIfWinner(player, index, offset, count)
-// checkGameStateForWinner(player)
 
 
 -(BOOL)checkIfWinner: (int) player atIndex:(int) index atOffset:(int)offset atCount:(int)count
@@ -280,10 +274,16 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
             return true;
         }
         
-        if( (index + 1) % NUMBER_OF_COLUMNS == 0 && (offset == 1 || offset == (NUMBER_OF_COLUMNS + 1)) ) {
+        if( (index + 1) % NUMBER_OF_COLUMNS == 0 &&
+           (offset == 1 || offset == (NUMBER_OF_COLUMNS + 1)) ) {
             return false;
         }
-        return [self checkIfWinner:player atIndex:index+offset atOffset:offset atCount:count];
+        else if(index+offset >= self.gameStateArray.count){
+            return false;
+        }
+        else {
+            return [self checkIfWinner:player atIndex:index+offset atOffset:offset atCount:count];
+        }
     }
     
     return false;
@@ -299,17 +299,17 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
             [self.currentPlayerLabel setText:[NSString stringWithFormat:@"%@ Won",self.currPlayer]];
             self.gameState = gameVictory;
             return true;
-        }else if([self checkIfWinner:player atIndex:id atOffset:9 atCount:0]){
+        }else if([self checkIfWinner:player atIndex:id atOffset:NUMBER_OF_COLUMNS-1 atCount:0]){
             NSLog(@"checkGameStateForWinner true");
             [self.currentPlayerLabel setText:[NSString stringWithFormat:@"%@ Won",self.currPlayer]];
             self.gameState = gameVictory;
             return true;
-        }else if([self checkIfWinner:player atIndex:id atOffset:10 atCount:0]){
+        }else if([self checkIfWinner:player atIndex:id atOffset:NUMBER_OF_COLUMNS atCount:0]){
             NSLog(@"checkGameStateForWinner true");
             [self.currentPlayerLabel setText:[NSString stringWithFormat:@"%@ Won",self.currPlayer]];
             self.gameState = gameVictory;
             return true;
-        }else if([self checkIfWinner:player atIndex:id atOffset:11 atCount:0]){
+        }else if([self checkIfWinner:player atIndex:id atOffset:NUMBER_OF_COLUMNS+1 atCount:0]){
             NSLog(@"checkGameStateForWinner true");
             [self.currentPlayerLabel setText:[NSString stringWithFormat:@"%@ Won",self.currPlayer]];
             self.gameState = gameVictory;
@@ -321,7 +321,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 }
 
 
-
+/*
 -(BOOL)checkIfPlayerWon {
     
     //VERTICALLY
@@ -429,6 +429,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
     return false;
 }
+ */
 
 #pragma mark JSON functions
 
@@ -456,9 +457,16 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
              if(!gameStateHasntChanged){
                  self.gameStateArray = [JSONResp objectForKey:@"board"];
                  
-                 if(![self checkGameStateForWinner:self.currentPlayer]){
+                 int opponentID = 0;
+                 if(self.currentPlayer == PLAYER_ONE){
+                     opponentID = PLAYER_TWO;
+                 }else if(self.currentPlayer == PLAYER_TWO){
+                     opponentID = PLAYER_ONE;
+                 }
+                 
+                 if(![self checkGameStateForWinner:opponentID]){
                     self.yourTurn = YES;
-                     [self.currentPlayerLabel setText:@"Your turn"];
+                    [self.currentPlayerLabel setText:@"Your turn"];
                  }
                  [self.collectionView reloadData];
              }
@@ -466,7 +474,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
          } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
              NSLog(@"Error: %@", error);
          }];
-    [self checkGameStateForWinner:self.currentPlayer];
+//    [self checkGameStateForWinner:self.currentPlayer];
 }
 
 
@@ -481,7 +489,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
         
         //add game board array to params
         NSDictionary *parameters = @{@"id": self.userId,
-                                     @"name": @"Christian"};
+                                     @"name": @"PLAYER ONE"};
         
         [manager POST:BaseURLString
            parameters:parameters
@@ -548,9 +556,6 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
         default:
             break;
     }
-    
-//    NSLog(@"parseJSONData currPlayer: %@, opponentID: %@",self.currPlayer, self.opponentId);
-//    NSLog(@"parseJSONData players: %i",self.players.count);
     
     
 }
