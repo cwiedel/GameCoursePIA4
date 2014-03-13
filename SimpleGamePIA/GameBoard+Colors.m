@@ -13,7 +13,7 @@
 @implementation GameBoard (Colors)
 
 +(UIColor *) playerOneColor {
-    return UIColorFromRGB(0x3a96d1);
+    return UIColorFromRGB(0x34AADC);
 }
 
 +(UIColor *) playerTwoColor {

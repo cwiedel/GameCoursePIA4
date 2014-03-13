@@ -9,6 +9,7 @@
 #import "GameBoard.h"
 #import "GameBoard+Colors.h"
 #import <AFNetworking/AFNetworking.h>
+#import "Splash.h"
 
 static NSString *const BaseURLString = @"http://localhost:4730/game/";
 
@@ -52,6 +53,9 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 
 - (void)viewDidLoad
 {
+
+    [self setNeedsStatusBarAppearanceUpdate];
+    
     self.currentPlayer = PLAYER_ONE;
     
     
@@ -63,6 +67,9 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     }
     
     [self setupUI];
+    
+//    Splash *splashView = [[Splash alloc] initWithFrame:self.view.frame];
+//    [self.view addSubview:splashView];
     
     [super viewDidLoad];
 }
@@ -76,7 +83,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     layout.minimumLineSpacing = 0.5f;
     
     float gridLength = 315.0f;
-    float gridTopMargin = 64.0f;
+    float gridTopMargin = 74.0f;
     UIColor *labelColor = [GameBoard labelColor];
     
     self.collectionView=[[UICollectionView alloc] initWithFrame:CGRectMake(0, gridTopMargin, gridLength, gridLength) collectionViewLayout:layout];
@@ -88,20 +95,25 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     [self.collectionView setBackgroundColor:[UIColor whiteColor]];
     [self.view addSubview:self.collectionView];
     
-    self.currentPlayerLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, 25, 200, 44)];
+    UIView *headerView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 320.0f, 64.0f)];
+    [headerView setBackgroundColor:[GameBoard playerOneColor]];
+    [self.view addSubview:headerView];
+    
+    self.currentPlayerLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, 30.0f, 320.0f, 24)];
     [self.currentPlayerLabel setText:@"Current player:"];
     [self.currentPlayerLabel setTextAlignment:NSTextAlignmentCenter];
-    [self.currentPlayerLabel setTextColor:labelColor];
+    [self.currentPlayerLabel setTextColor:[UIColor whiteColor]];
+//    [self.currentPlayerLabel setBackgroundColor:[GameBoard playerOneColor]];
     self.currentPlayerLabel.center = CGPointMake(self.view.center.x, self.currentPlayerLabel.center.y);
     [self.view addSubview:self.currentPlayerLabel];
     
-    self.startResetButton = [[UIButton alloc]initWithFrame:CGRectMake(0, 400, 200, 44)];
+    self.startResetButton = [[UIButton alloc]initWithFrame:CGRectMake(0, 400, gridLength, 50)];
     [self.startResetButton setTitle:@"Start Game" forState:UIControlStateNormal];
     self.startResetButton.center = CGPointMake(self.view.center.x, self.startResetButton.center.y);
-    [self.startResetButton setTitleColor:labelColor forState:UIControlStateNormal];
+    [self.startResetButton setBackgroundColor:[GameBoard playerOneColor]];
+    [self.startResetButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [self.startResetButton addTarget:self action:@selector(startGame) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.startResetButton];
-    
 
     // JSON TEST BUTTONS
     
@@ -133,6 +145,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
     NSLog(@"generated userID: %@",self.userId);
     self.yourTurn = YES;
+    [self.currentPlayerLabel setText:@"New game"];
     
     [self postJSON];
     
@@ -177,7 +190,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
     // match indexPath to gameStateArray and set color
     int arrayIndex = [self convertIndexPathToInt:indexPath];
-    NSLog(@"cellForItemAtIndexPath: %i ", arrayIndex);
+//    NSLog(@"cellForItemAtIndexPath: %i ", arrayIndex);
     
     if([[self.gameStateArray objectAtIndex:arrayIndex] isEqualToNumber:[NSNumber numberWithInt:UNUSED_CELL]]){
         cell.backgroundColor = [GameBoard unusedTileColor];
@@ -242,9 +255,13 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     int tens = indexPath.row * 10;
     int ones = indexPath.section;
     int arrayInt = tens + ones;
-    NSLog(@"arrayInt: %i", arrayInt );
+//    NSLog(@"arrayInt: %i", arrayInt );
     return arrayInt;
 }
+
+
+// checkIfWinner(player, index, offset, count)
+// checkGameStateForWinner(player)
 
 -(BOOL)checkIfPlayerWon {
     
@@ -314,6 +331,43 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
         }
     }
     
+    //DIAGONALLY
+    for(int column = 0; column < NUMBER_OF_COLUMNS; column++) {
+        int consecutiveCellsPlayerOne = 0;
+        int consecutiveCellsPlayerTwo = 0;
+        for(int row = 0; row < NUMBER_OF_ROWS; row++) {
+            int tag = [self getTagForCellAtIndexPath: row atRow:row];
+            NSLog(@"diag row: %i, col: %i", row,row);
+            if(tag == PLAYER_ONE) {
+                consecutiveCellsPlayerOne++;
+                NSLog(@"cons cells diag p1: %i", consecutiveCellsPlayerOne);
+            }else if(tag == PLAYER_TWO ) {
+                consecutiveCellsPlayerTwo++;
+                NSLog(@"cons cells diag p2: %i", consecutiveCellsPlayerOne);
+            }else {
+                consecutiveCellsPlayerOne = 0;
+                consecutiveCellsPlayerTwo = 0;
+            }
+            
+            if(consecutiveCellsPlayerOne >= 5){
+                NSLog(@"PLAYER ONE WON");
+                [self.currentPlayerLabel setText:@"PLAYER ONE WON!"];
+                self.gameState = gameVictory;
+                [self.getJSONTimer invalidate];
+                return true;
+            }else if(consecutiveCellsPlayerTwo >= 5){
+                NSLog(@"PLAYER TWO WON");
+                [self.currentPlayerLabel setText:@"PLAYER TWO WON!"];
+                self.gameState = gameVictory;
+                [self.getJSONTimer invalidate];
+                return true;
+            }
+        }
+    }
+    
+    
+    
+    
     return false;
 }
 
@@ -327,12 +381,12 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     
     NSString *URLWithId = [NSString stringWithFormat:@"%@%@", BaseURLString, self.gameId];
     
-    NSLog(@"%@", URLWithId);
+//    NSLog(@"%@", URLWithId);
     
     [manager GET:URLWithId
       parameters:nil
          success:^(AFHTTPRequestOperation *operation, id responseObject) {
-             NSLog(@"jsonTestGet: %@", responseObject);
+//             NSLog(@"jsonTestGet: %@", responseObject);
              
              NSError *e;
              NSDictionary *JSONResp = [NSJSONSerialization JSONObjectWithData:[operation.responseString dataUsingEncoding:NSUTF8StringEncoding]
@@ -373,7 +427,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
         [manager POST:BaseURLString
            parameters:parameters
               success:^(AFHTTPRequestOperation *operation, id responseObject) {
-                  NSLog(@"jsonTestPost: %@", responseObject);
+//                  NSLog(@"jsonTestPost: %@", responseObject);
                   
                   NSError *e;
                   self.JSONResponse = [NSJSONSerialization JSONObjectWithData:[operation.responseString dataUsingEncoding:NSUTF8StringEncoding]
@@ -405,7 +459,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
         [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
         [request setHTTPBody:[aStr dataUsingEncoding:NSUTF8StringEncoding]];
         
-        NSLog(@"Data: %@",aStr);
+//        NSLog(@"Data: %@",aStr);
         
         NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
         [connection start];
@@ -436,8 +490,8 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
             break;
     }
     
-    NSLog(@"parseJSONData currPlayer: %@, opponentID: %@",self.currPlayer, self.opponentId);
-    NSLog(@"parseJSONData players: %i",self.players.count);
+//    NSLog(@"parseJSONData currPlayer: %@, opponentID: %@",self.currPlayer, self.opponentId);
+//    NSLog(@"parseJSONData players: %i",self.players.count);
     
     
 }
@@ -451,6 +505,10 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
                                  @"players":self.players
                                  };
     return JSONToPost;
+}
+
+-(UIStatusBarStyle)preferredStatusBarStyle{
+    return UIStatusBarStyleLightContent;
 }
 
 

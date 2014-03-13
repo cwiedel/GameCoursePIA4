@@ -29,7 +29,7 @@
     [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
     
     
-        [self.window makeKeyAndVisible];
+    [self.window makeKeyAndVisible];
     return YES;
 }
 
