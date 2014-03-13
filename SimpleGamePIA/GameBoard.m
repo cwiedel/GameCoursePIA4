@@ -234,7 +234,11 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
         int position = [self convertIndexPathToInt:indexPath];
         [self.gameStateArray replaceObjectAtIndex:position withObject:[NSNumber numberWithInt: self.currentPlayer]];
         [self postJSONWithID];
-        [self checkIfPlayerWon];
+        NSLog(@"Clicked cell at position: %i", position);
+//        [self checkIfPlayerWon];
+        
+        [self checkGameStateForWinner:self.currentPlayer];
+    
         
         //start get calls to server
         
@@ -263,6 +267,61 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 // checkIfWinner(player, index, offset, count)
 // checkGameStateForWinner(player)
 
+
+-(BOOL)checkIfWinner: (int) player atIndex:(int) index atOffset:(int)offset atCount:(int)count
+{
+//    NSLog(@"checkIfWinner player: %i, atIndex: %i, atOffset: %i, atCount: %i",player, index, offset, count);
+//    NSLog(@"foo: %@", [self.gameStateArray objectAtIndex:index]);
+    if([self.gameStateArray objectAtIndex:index] == [NSNumber numberWithInt:player]){
+        count++;
+//        NSLog(@"checkIfWinner count:%i",count);
+        if(count >= 5){
+            NSLog(@"checkIfWinner true");
+            return true;
+        }
+        
+        if( (index + 1) % NUMBER_OF_COLUMNS == 0 && (offset == 1 || offset == (NUMBER_OF_COLUMNS + 1)) ) {
+            return false;
+        }
+        return [self checkIfWinner:player atIndex:index+offset atOffset:offset atCount:count];
+    }
+    
+    return false;
+}
+
+-(BOOL)checkGameStateForWinner: (int) player
+{
+    
+    for(int id = 0; id < (NUMBER_OF_COLUMNS * NUMBER_OF_ROWS); id++){
+        
+        if([self checkIfWinner:player atIndex:id atOffset:1 atCount:0]){
+            NSLog(@"checkGameStateForWinner true");
+            [self.currentPlayerLabel setText:[NSString stringWithFormat:@"%@ Won",self.currPlayer]];
+            self.gameState = gameVictory;
+            return true;
+        }else if([self checkIfWinner:player atIndex:id atOffset:9 atCount:0]){
+            NSLog(@"checkGameStateForWinner true");
+            [self.currentPlayerLabel setText:[NSString stringWithFormat:@"%@ Won",self.currPlayer]];
+            self.gameState = gameVictory;
+            return true;
+        }else if([self checkIfWinner:player atIndex:id atOffset:10 atCount:0]){
+            NSLog(@"checkGameStateForWinner true");
+            [self.currentPlayerLabel setText:[NSString stringWithFormat:@"%@ Won",self.currPlayer]];
+            self.gameState = gameVictory;
+            return true;
+        }else if([self checkIfWinner:player atIndex:id atOffset:11 atCount:0]){
+            NSLog(@"checkGameStateForWinner true");
+            [self.currentPlayerLabel setText:[NSString stringWithFormat:@"%@ Won",self.currPlayer]];
+            self.gameState = gameVictory;
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+
+
 -(BOOL)checkIfPlayerWon {
     
     //VERTICALLY
@@ -273,23 +332,23 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
             int tag = [self getTagForCellAtIndexPath: column atRow:row];
             if(tag == PLAYER_ONE) {
                 consecutiveCellsPlayerOne++;
-                NSLog(@"cons cells: %i", consecutiveCellsPlayerOne);
+//                NSLog(@"cons cells: %i", consecutiveCellsPlayerOne);
             }else if(tag == PLAYER_TWO ) {
                 consecutiveCellsPlayerTwo++;
-                NSLog(@"cons cells: %i", consecutiveCellsPlayerOne);
+//                NSLog(@"cons cells: %i", consecutiveCellsPlayerOne);
             }else {
                 consecutiveCellsPlayerOne = 0;
                 consecutiveCellsPlayerTwo = 0;
             }
             
             if(consecutiveCellsPlayerOne >= 5){
-                NSLog(@"PLAYER ONE WON");
+//                NSLog(@"PLAYER ONE WON");
                 [self.currentPlayerLabel setText:@"PLAYER ONE WON!"];
                 self.gameState = gameVictory;
                 [self.getJSONTimer invalidate];
                 return true;
             }else if(consecutiveCellsPlayerTwo >= 5){
-                NSLog(@"PLAYER TWO WON");
+//                NSLog(@"PLAYER TWO WON");
                 [self.currentPlayerLabel setText:@"PLAYER TWO WON!"];
                 self.gameState = gameVictory;
                 [self.getJSONTimer invalidate];
@@ -306,23 +365,23 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
             int tag = [self getTagForCellAtIndexPath: row atRow:column];
             if(tag == PLAYER_ONE) {
                 consecutiveCellsPlayerOne++;
-                NSLog(@"cons cells: %i", consecutiveCellsPlayerOne);
+//                NSLog(@"cons cells: %i", consecutiveCellsPlayerOne);
             }else if(tag == PLAYER_TWO ) {
                 consecutiveCellsPlayerTwo++;
-                NSLog(@"cons cells: %i", consecutiveCellsPlayerOne);
+//                NSLog(@"cons cells: %i", consecutiveCellsPlayerOne);
             }else {
                 consecutiveCellsPlayerOne = 0;
                 consecutiveCellsPlayerTwo = 0;
             }
             
             if(consecutiveCellsPlayerOne >= 5){
-                NSLog(@"PLAYER ONE WON");
+//                NSLog(@"PLAYER ONE WON");
                 [self.currentPlayerLabel setText:@"PLAYER ONE WON!"];
                 self.gameState = gameVictory;
                 [self.getJSONTimer invalidate];
                 return true;
             }else if(consecutiveCellsPlayerTwo >= 5){
-                NSLog(@"PLAYER TWO WON");
+//                NSLog(@"PLAYER TWO WON");
                 [self.currentPlayerLabel setText:@"PLAYER TWO WON!"];
                 self.gameState = gameVictory;
                 [self.getJSONTimer invalidate];
@@ -337,26 +396,26 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
         int consecutiveCellsPlayerTwo = 0;
         for(int row = 0; row < NUMBER_OF_ROWS; row++) {
             int tag = [self getTagForCellAtIndexPath: row atRow:row];
-            NSLog(@"diag row: %i, col: %i", row,row);
+//            NSLog(@"diag row: %i, col: %i", row,row);
             if(tag == PLAYER_ONE) {
                 consecutiveCellsPlayerOne++;
-                NSLog(@"cons cells diag p1: %i", consecutiveCellsPlayerOne);
+//                NSLog(@"cons cells diag p1: %i", consecutiveCellsPlayerOne);
             }else if(tag == PLAYER_TWO ) {
                 consecutiveCellsPlayerTwo++;
-                NSLog(@"cons cells diag p2: %i", consecutiveCellsPlayerOne);
+//                NSLog(@"cons cells diag p2: %i", consecutiveCellsPlayerOne);
             }else {
                 consecutiveCellsPlayerOne = 0;
                 consecutiveCellsPlayerTwo = 0;
             }
             
             if(consecutiveCellsPlayerOne >= 5){
-                NSLog(@"PLAYER ONE WON");
+//                NSLog(@"PLAYER ONE WON");
                 [self.currentPlayerLabel setText:@"PLAYER ONE WON!"];
                 self.gameState = gameVictory;
                 [self.getJSONTimer invalidate];
                 return true;
             }else if(consecutiveCellsPlayerTwo >= 5){
-                NSLog(@"PLAYER TWO WON");
+//                NSLog(@"PLAYER TWO WON");
                 [self.currentPlayerLabel setText:@"PLAYER TWO WON!"];
                 self.gameState = gameVictory;
                 [self.getJSONTimer invalidate];
@@ -397,7 +456,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
              if(!gameStateHasntChanged){
                  self.gameStateArray = [JSONResp objectForKey:@"board"];
                  
-                 if(![self checkIfPlayerWon]){
+                 if(![self checkGameStateForWinner:self.currentPlayer]){
                     self.yourTurn = YES;
                      [self.currentPlayerLabel setText:@"Your turn"];
                  }
@@ -407,7 +466,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
          } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
              NSLog(@"Error: %@", error);
          }];
-    [self checkIfPlayerWon];
+    [self checkGameStateForWinner:self.currentPlayer];
 }
 
 
