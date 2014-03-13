@@ -62,16 +62,21 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     self.indexPathArray = [[NSMutableArray alloc]init];
     self.gameStateArray = [[NSMutableArray alloc]init];         // LOAD FROM API
     
-    for(int i = 0; i<100; i++) {
-        [self.gameStateArray addObject:[NSNumber numberWithInt:UNUSED_CELL]];
-    }
-    
+
+    [self fillArrayWithEmptyCells];
     [self setupUI];
     
 //    Splash *splashView = [[Splash alloc] initWithFrame:self.view.frame];
 //    [self.view addSubview:splashView];
     
     [super viewDidLoad];
+}
+
+-(void)fillArrayWithEmptyCells
+{
+    for(int i = 0; i<100; i++) {
+        [self.gameStateArray addObject:[NSNumber numberWithInt:UNUSED_CELL]];
+    }
 }
 
 -(void)setupUI {
@@ -146,6 +151,13 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 
 -(void)startGame
 {
+    if(self.gameState == gameVictory){
+        for(int i = 0; i<100; i++) {
+            [self.gameStateArray replaceObjectAtIndex:i withObject:[NSNumber numberWithInt:UNUSED_CELL]];
+        }
+        [self.collectionView reloadData];
+    }
+    
     self.gameState = gameOngoing;
     int randomUserId = arc4random() % 999999;
     self.userId = [NSString stringWithFormat:@"%i",randomUserId];
@@ -157,8 +169,6 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
     [self postJSON];
     
     self.getJSONTimer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(getJSON) userInfo:nil repeats:YES];
-//    getJSONTimer
-    
 }
 
 #pragma mark Collection view functions
@@ -240,6 +250,7 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
         [self postJSONWithID];
         NSLog(@"Clicked cell at position: %i", position);
         if([self checkGameStateForWinner:self.currentPlayer]){
+            [self.currentPlayerLabel setText:@"You won!"];
             [self.getJSONTimer invalidate];
         }
      }
@@ -291,27 +302,22 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
 
 -(BOOL)checkGameStateForWinner: (int) player
 {
-    
     for(int id = 0; id < (NUMBER_OF_COLUMNS * NUMBER_OF_ROWS); id++){
         
         if([self checkIfWinner:player atIndex:id atOffset:1 atCount:0]){
             NSLog(@"checkGameStateForWinner true");
-            [self.currentPlayerLabel setText:[NSString stringWithFormat:@"%@ Won",self.currPlayer]];
             self.gameState = gameVictory;
             return true;
         }else if([self checkIfWinner:player atIndex:id atOffset:NUMBER_OF_COLUMNS-1 atCount:0]){
             NSLog(@"checkGameStateForWinner true");
-            [self.currentPlayerLabel setText:[NSString stringWithFormat:@"%@ Won",self.currPlayer]];
             self.gameState = gameVictory;
             return true;
         }else if([self checkIfWinner:player atIndex:id atOffset:NUMBER_OF_COLUMNS atCount:0]){
             NSLog(@"checkGameStateForWinner true");
-            [self.currentPlayerLabel setText:[NSString stringWithFormat:@"%@ Won",self.currPlayer]];
             self.gameState = gameVictory;
             return true;
         }else if([self checkIfWinner:player atIndex:id atOffset:NUMBER_OF_COLUMNS+1 atCount:0]){
             NSLog(@"checkGameStateForWinner true");
-            [self.currentPlayerLabel setText:[NSString stringWithFormat:@"%@ Won",self.currPlayer]];
             self.gameState = gameVictory;
             return true;
         }
@@ -467,6 +473,8 @@ static NSString *const BaseURLString = @"http://localhost:4730/game/";
                  if(![self checkGameStateForWinner:opponentID]){
                     self.yourTurn = YES;
                     [self.currentPlayerLabel setText:@"Your turn"];
+                 }else{
+                     [self.currentPlayerLabel setText:@"Your opponent won!"];
                  }
                  [self.collectionView reloadData];
              }
